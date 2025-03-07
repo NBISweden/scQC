@@ -1,0 +1,14 @@
+name: soup_decont
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base
+  - r-markdown
+  - r-knitr
+  - bioconductor-decontx
+  - bioconductor-singlecelltk
+  - r-soupx
+  - r-hdf5r
+  - r-argparse

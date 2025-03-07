@@ -1,0 +1,89 @@
+###############################
+# general info about experiment
+###############################
+
+species: mouse
+outdir: /Users/asabjor/projects/sc-devop/scQC/data/mouse/pipeline
+
+###############################
+# cell filtering settings
+###############################
+
+filtering:
+  filter_batch: sample
+  cutoffs:
+    [['n_genes_by_counts', 'fixed',200,'below'],
+    ['n_genes_by_counts','adaptive',3,'above'],
+    ['pct_counts_mt', 'adaptive',2,'above'],
+    ['pct_counts_pc', 'adaptive',2,'below']]
+
+
+###############################
+# info per sample
+###############################
+
+samples:
+  GSM6757771_rep1:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757771_rep1_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757771_rep1_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: cells
+      sample_id: s1
+      tissue: kidney
+      study: GSE218853
+  GSM6757772_rep2:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757772_rep2_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757772_rep2_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: cells
+      sample_id: s2
+      tissue: kidney
+      study: GSE218853      
+  GSM6757774_nuc2:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757774_nuc2_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757774_nuc2_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: nuclei
+      sample_id: s2
+      tissue: kidney
+      study: GSE218853
+  GSM6757775_nuc3:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757775_nuc3_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE218853/GSM6757775_nuc3_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: nuclei
+      sample_id: s3
+      tissue: kidney
+      study: GSE218853
+  GSE261852_CI82_spl1:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE261852/GSE261852_CI82_spl1_raw_feature_bc_matrix.h5
+    filt_file: 
+    meta:
+      libtype: cells
+      sample_id: spl1
+      tissue: blood
+      study: GSE261852
+  GSE261852_CI82_spl2:
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE261852/GSE261852_CI82_spl2_raw_feature_bc_matrix.h5
+    filt_file:
+    meta:
+      libtype: cells
+      sample_id: spl2
+      tissue: blood
+      study: GSE261852
+  GSM6594872_SAM24349928:      
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE213825/GSM6594872_SAM24349928_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE213825/GSM6594872_SAM24349928_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: cells
+      sample_id: SAM24349928
+      tissue: root-ganglia
+      study: GSE213825
+  GSM6594883_SAM24374037:      
+    raw_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE213825/GSM6594883_SAM24374037_raw_feature_bc_matrix.h5
+    filt_file: /Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE213825/GSM6594883_SAM24374037_filtered_feature_bc_matrix.h5
+    meta:
+      libtype: cells
+      sample_id: SAM24374037
+      tissue: root-ganglia
+      study: GSE213825

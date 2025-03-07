@@ -1,0 +1,15 @@
+name: cellbender
+channels:
+  - conda-forge
+  - pytorch
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.7
+  - cellbender
+  - pytables
+  - pytorch
+  - jupyter_contrib_nbextensions
+  - jsonschema-with-format-nongpl
+  - webcolors=1.13
+#  - nbconda

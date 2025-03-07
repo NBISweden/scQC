@@ -1,0 +1,1002 @@
+---
+title: "QC Pipeline"
+description: "Test script with all steps for QC pipe"
+format:
+    html:
+        code-fold: true
+        code-summary: "Code"
+        code-overflow: wrap
+        toc: true
+        toc-depth: 3
+        toc-expand: 1
+lightbox: true
+engine: jupyter
+jupyter: python3
+---
+
+## Setup
+
+#### Read in the yaml file:
+
+```{python}
+#| label: yaml-load
+import yaml
+with open('./settings.yml', 'r') as f:
+    settings = yaml.load(f, Loader=yaml.SafeLoader)
+```
+
+Visualize all metadata:
+
+```{python}
+#| label: meta-sankey
+#| fig.heigth: 8
+#| fig.width: 12
+
+import pandas as pd
+import plotly.graph_objects as go
+import os
+
+allmeta = [settings['samples'][sample]['meta'] for sample in settings['samples'].keys()]
+meta = pd.DataFrame.from_dict(allmeta) 
+meta.index = settings['samples'].keys()
+meta['sample'] = meta.index
+meta['idx'] = range(0,meta.shape[0])
+
+dims = []
+for var in meta.columns[:-2]:
+    dims.append(go.parcats.Dimension(values=meta[var], label=var, categoryorder='category ascending'))
+
+
+fig = go.Figure(data = [go.Parcats(dimensions=[x for x in dims],
+        line={'color': meta.idx})])
+
+# could not get the plotly to display, instead save as static image.
+if not os.path.exists("images"):
+    os.mkdir("images")
+
+fig.write_image("images/metadata.png")            
+```
+
+![image](images/metadata.png)
+
+
+#### Paths to files
+
+```{python}
+#| label: paths
+
+import os
+
+resdir = settings['outdir']
+if not os.path.exists(resdir):
+    os.makedirs(resdir)
+
+#dropsdir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse/output/emptydrops/"
+#singlerdir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse/output/singler/"
+#
+samples = list(settings['samples'].keys())
+#["GSM6757771_rep1","GSM6757772_rep2","GSM6757773_rep3","GSM6757774_nuc2","GSM6757775_nuc3"]
+
+for sample in samples:
+    sdir = os.path.join(resdir,sample)
+    if not os.path.exists(sdir):
+        os.makedirs(sdir)
+
+```
+
+#### Packages
+
+```{python}
+#| label: libraries
+
+import gc
+import numpy as np
+import scanpy as sc
+import warnings
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import subprocess
+import anndata
+import seaborn as sns
+from IPython.display import display, Markdown
+
+warnings.simplefilter(action='ignore', category=Warning)
+
+# verbosity: errors (0), warnings (1), info (2), hints (3)
+sc.settings.verbosity = 3
+sc.settings.set_figure_params(dpi=80)
+
+%matplotlib inline
+```
+
+#### Functions
+
+```{python}
+#| label: functions
+
+def rotate_xticks(ax, size=8, rotation=45):
+    ax.set_xticklabels(ax.get_xticklabels(), rotation = rotation, size=size, ha='right')    
+```
+
+
+## Load data and cell calling
+
+Run emptydrops for cell calling and ambient RNA estimation. Load the count matrices and also run SingleR for celltype assignment.
+
+### Run EmptyDrops
+
+First run `emptyDrops` for each of the samples via an Rscript. Then load the csv files with cell predictions for plotting barcode rank plots and ambient signal. 
+
+```{python}
+#| label: read-dropdata
+
+Rscript= "/Users/asabjor/miniconda3/envs/rtools_scqc/bin/Rscript"
+os.environ["R_HOME"] = "/Users/asabjor/miniconda3/envs/rtools_scqc/lib/R"
+script = "/Users/asabjor/projects/sc-devop/scQC/source/all_qc/run_emptydrops.R"
+
+dropletdata = {}
+ambientgenes = {}
+for sample in samples:
+    infile = settings['samples'][sample]['raw_file']
+    if not os.path.exists(infile):
+        print("No such file: ", infile)
+        os.sys.exit()
+    odir = os.path.join(resdir,sample,"emptydrops")
+    if not os.path.exists(odir):
+       os.makedirs(odir)
+
+    gene_file = os.path.join(odir,'gene_stats.csv')
+    cell_file = os.path.join(odir,'cell_stats.csv')
+    if (os.path.exists(gene_file) and os.path.exists(cell_file)) :
+        print("EmptyDrops done for "+sample)
+    else:   
+        cmd = [Rscript, script, "-i", infile, "-o", odir]
+        print(cmd)
+        logfile = os.path.join(odir,"emptydrops.log")
+        with open(logfile,"w") as f:    
+            subprocess.call(cmd, stdout=f) 
+
+    stats = pd.read_csv(cell_file, index_col = 0)
+    stats = stats.loc[stats['Total']>0,:]
+    dropletdata[sample] = stats
+    ambientgenes[sample] = pd.read_csv(gene_file, index_col = 0)
+    print(sample+ " with "+ str(ambientgenes[sample].shape[0]) + " genes and " + str(stats.shape[0]) + " cells\n")
+
+```
+
+### Read in cellranger filtering
+
+If it is available, read in the filtered files from cellranger and store the list of barcodes.
+
+```{python}
+#| label: load-filtered
+cellranger_barcodes = {}
+for sample in samples:
+    if 'filt_file' in settings['samples'][sample].keys() and settings['samples'][sample]['filt_file'] != None : 
+        infile = settings['samples'][sample]['filt_file']
+        if os.path.exists(infile):
+            tmp = sc.read_10x_h5(infile)
+            cellranger_barcodes[sample] = tmp.obs_names
+        else: 
+            print()
+            cellranger_barcodes[sample]=[]
+    else:
+        cellranger_barcodes[sample]=[]
+
+```
+
+### Barcode ranks
+
+For each sample, plot the barcode rank plots with predicted cells according to EmptyDrops and CellRanger (if available). Second plot shows the predicted ambient signal genes from emptyDrops. For each sample separately.
+
+
+```{python}
+#| label: barcode-rank
+
+fdr_cut = 0.05
+
+def plot_barcode_rank(sample):
+
+    stats = dropletdata[sample]
+    stats["rank"] = stats['Total'].rank(method='first', ascending = False)
+    stats["isCell"] = stats["FDR"] <= fdr_cut
+    stats["isCellCR"] = dropletdata[sample].index.isin(cellranger_barcodes[sample])
+
+    print("EmptyDrops cell prediction: ", str(stats["isCell"].sum()))
+    print(" lowest nUMI: ", str(stats.Total[stats.isCell].min()), "\n")
+    print("Cellranger cell prediction: " + str(stats["isCellCR"].sum()))
+    print(" lowest nUMI: ", str(stats.Total[stats.isCellCR].min()), "\n")
+
+    stats["color"] = "Grey"
+    stats["color"][stats.isCell] = "Blue"
+    stats["color"][stats.isCellCR] = "Red"
+    stats["color"][stats.isCell & stats.isCellCR] = "Purple"
+    clegend = [mpatches.Patch(color='Purple', label='Both'),
+        mpatches.Patch(color='Blue', label='EmptyDrops'),
+        mpatches.Patch(color='Red', label='CellRanger'),
+        mpatches.Patch(color='Grey', label='None')
+        ]
+    print("Intersection cell prediction:", str((stats['color'] =="Purple").sum()))
+
+    fig, axs = plt.subplots(1, 2, figsize=(10,6),constrained_layout=True)
+    axs[0].scatter(stats["rank"], stats['Total'], c=stats['color'])
+    axs[0].set_xscale("log")
+    axs[0].set_yscale("log")
+    axs[0].set_xlabel("rank")
+    axs[0].set_ylabel("nUMI")
+    axs[0].title.set_text(sample)
+    axs[0].legend(handles=clegend,
+          loc='lower left')
+
+
+    gstats = ambientgenes[sample]
+    topA = gstats['ambient'].sort_values(ascending=False).head(20).index
+    gstats['ambient'][topA].plot.bar(ax=axs[1])
+    axs[1].title.set_text("EmptyDrops ambient genes")
+    rotate_xticks(axs[1])
+
+
+
+```
+
+FIX! Order of barplot for ambient is different to the violins. 
+
+::: {.panel-tabset}
+
+```{python}
+#| output: asis
+#| echo: false
+
+for sample in dropletdata.keys():
+    display(Markdown(f"#### {sample}"))
+    plot_barcode_rank(sample)
+    display(plt.gcf())
+    plt.close()
+    display(Markdown(f" "))   
+```
+
+:::
+
+
+### Load count matrices
+
+Use cutoff for the emptyDrops predictions to filter the cells in the raw matrices and create one merged dataset with all samples.
+
+```{python}
+#| label: read-data
+
+metadata_all = {}
+alldata = {}
+for sample in samples:
+    infile = settings['samples'][sample]['raw_file']
+
+    adata_raw = sc.read_10x_h5(infile)
+    adata_raw.var_names_make_unique()
+    print(sample+ " with "+ str(adata_raw.n_vars) + " genes and " + str(adata_raw.n_obs) + " cells\n")
+    adata_raw.obs["sample"] = sample
+    for (k,v) in settings['samples'][sample]['meta'].items(): 
+        adata_raw.obs[k] = v
+        metadata_all[k] = 1
+
+#    adata_raw.obs["type"] = sample.split("_")[1]
+    # filter for predicted cells
+    select = dropletdata[sample]['isCell']
+    cell_idx = select.index[select]
+    adata_raw  = adata_raw[cell_idx,:]
+    # save gene info from ambient in .var
+    gdata = ambientgenes[sample]
+    adata_raw.var['ambient'] = np.nan
+    adata_raw.var['ambient'][adata_raw.var.index.isin(gdata.index)] = gdata['ambient']
+    print("After filtering " + str(adata_raw.n_obs) + " cells\n")
+    alldata[sample]=adata_raw
+
+```
+
+
+### Celltyping
+
+Run for one sample at a time using a braod reference. Only found such ref for singleR, so run with an Rscript.
+
+Add the predictions to `adata.var`
+
+```{python}
+#| label: singler
+
+Rscript= "/Users/asabjor/miniconda3/envs/rtools_scqc/bin/Rscript"
+os.environ["R_HOME"] = "/Users/asabjor/miniconda3/envs/rtools_scqc/lib/R"
+script = "/Users/asabjor/projects/sc-devop/scQC/source/all_qc/run_singleR.R"
+
+for sample in samples:
+    infile = settings['samples'][sample]['raw_file']
+    dropsfile = os.path.join(resdir,sample,'emptydrops','cell_stats.csv')
+    outfile = os.path.join(resdir,sample, sample + '_singler.csv')
+    if (os.path.exists(outfile)) :
+        print("SingleR done for "+sample)
+    else:   
+        cmd = [Rscript, script, "-i", infile, "-o", outfile, "-d", dropsfile, "-s", "mouse"]
+        print(cmd)
+        logfile = os.path.join(resdir,sample, sample + "_singler.log")
+        with open(logfile,"w") as f:    
+            subprocess.call(cmd, stdout=f) 
+
+    stats = pd.read_csv(outfile, index_col = 0)
+    alldata[sample].obs = pd.concat([alldata[sample].obs,stats], axis=1)
+    
+
+```
+
+
+```{python}
+#| label: celltype-print1
+# Stats on proportions per sample. List top 10 celltypes.
+ct_stats = {}
+for sample in samples:
+    ct_stats[sample] = alldata[sample].obs['pruned.labels'].value_counts(normalize=True)
+
+ct_stats = pd.concat(ct_stats.values(), axis=1)
+ct_stats.columns = samples
+# order by mean
+ct_stats['mean'] = ct_stats.mean(axis=1)
+ct_stats = ct_stats.sort_values(by="mean", ascending=False)
+
+print(ct_stats)
+```
+
+Barplot for top 10 categories
+
+```{python}
+#| label: celltype-plot1
+
+ct_stats.head(10).T.plot.bar(stacked=True).legend(loc='center left',bbox_to_anchor=(1.0, 0.5));
+```
+
+
+### Merge object
+
+Create one adata object from all samples
+
+```{python}
+#| label: merge
+
+# anndata.concat works to merge the data, But selects the intersection of genes across the datasets.
+adata = anndata.concat(alldata)
+adata.var = alldata[samples[0]].var[alldata[samples[0]].var_names.isin(adata.var_names)]
+adata.obs_names_make_unique() # in case of same barcode in 2 samples
+
+del alldata
+del ambientgenes
+del dropletdata
+del cellranger_barcodes
+gc.collect(generation=2)
+
+print(adata.shape)
+adata.obs['sample'].value_counts()
+```
+
+
+
+## Gene annotations
+
+First, read in the annotation file for biotypes.
+
+Make broader groupings:
+
+* Mito genes - both PC and nc.
+* PC genes - includes also IG/TR genes
+* lncRNA
+* other - all other categories, also genes with not translation in biomart.
+
+```{python}
+#| label: read-annot
+
+indir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse"
+annot_file = os.path.join(resdir, "mouse_annotation.csv")
+
+if os.path.exists(annot_file):
+    annot = pd.read_csv(annot_file, index_col=0)
+else:   
+    annot = sc.queries.biomart_annotations("mmusculus", ["ensembl_gene_id", "external_gene_name", "start_position", "end_position", "chromosome_name", "gene_biotype"] )
+    annot.to_csv(annot_file)
+
+
+# make slim biotype
+annot["gene_class"]= "other"
+
+pc_genes = ["protein_coding","IG_V_gene","IG_D_gene","IG_J_gene","IG_C_gene","IG_LV_gene", "TR_V_gene","TR_J_gene","TR_C_gene","TR_D_gene" ]
+
+annot["gene_class"][annot.gene_biotype.isin(pc_genes)] = "pc"
+annot["gene_class"][annot.gene_biotype == "lncRNA"] = "lncRNA"
+annot["gene_class"][annot.external_gene_name.str.startswith('mt-').fillna(False)] = "mt"
+```
+
+```{python}
+#| label: merge-annot
+
+## add into .var of the object
+t = adata.var.merge(annot, left_on="gene_ids", right_on="ensembl_gene_id", how='left')
+t.index = adata.var.index
+t.gene_class[t.gene_class.isna()] = "other"
+adata.var = t
+
+# add in the biotypes as own columns in adata.var
+gene_classes = ['pc','lncRNA','mt','other']
+for cl in gene_classes:
+    adata.var[cl]=adata.var['gene_class'] == cl
+
+
+```
+
+
+## Calculate QC
+
+First calculate percantage mito, then remove mito genes and calculate the rest.
+
+```{python}
+#| label: qc-genes
+
+# Add in also some more gene groups. Ribo, HB 
+# ribosomal genes
+adata.var['ribo'] = adata.var_names.str.startswith(("Rps","Rpl"))
+# hemoglobin genes.
+adata.var['hb'] = adata.var_names.str.contains(("^Hb[^(p|e|s)]"))
+
+sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
+
+adata = adata[:,~adata.var['mt']]
+
+sc.pp.calculate_qc_metrics(adata, qc_vars=['ribo','hb','pc','lncRNA','ribo','other'], percent_top=None, log1p=False, inplace=True)
+
+```
+
+
+## QC violins
+
+Violin plots with different metadata groupings, always include sample and top celltypes, but also add in any other metadata found in the metadata field of the settings.yml.
+
+```{python}
+#| label: qc-meta
+# fix top10 celltype and "other" annotation
+
+topC = ct_stats.head(10).index.tolist()
+adata.obs["topCelltype"] = adata.obs['pruned.labels'].copy()
+adata.obs['topCelltype'][~adata.obs['pruned.labels'].isin(topC)] = "Other"
+
+
+plot_vln_meta =  ["sample","topCelltype"]  +  list(metadata_all.keys())
+
+plot_stats = ['n_genes_by_counts', 'total_counts', 'pct_counts_mt', 'pct_counts_ribo', 'pct_counts_hb', 'pct_counts_pc', 'pct_counts_lncRNA', 'pct_counts_other']
+
+
+def plot_qc_vln(meta_slot):
+    fig, axs = plt.subplots(3, 3, figsize=(10,10),constrained_layout=True)
+    for stat, ax in zip(plot_stats, axs.flatten()):
+        sc.pl.violin(adata, stat, groupby = meta_slot, jitter=0.4,  size = 0.1, ax=ax, show=False )
+        rotate_xticks(ax)
+        ax.title.set_text(stat)
+
+```
+
+
+
+::: {.panel-tabset}
+
+
+```{python}
+#| output: asis 
+#| echo: false
+
+for md in plot_vln_meta:
+    display(Markdown(f"#### {md}"))
+    plot_qc_vln(md)
+    display(plt.gcf())
+    plt.close()
+    display(Markdown(f" "))
+
+```
+
+:::
+
+
+
+
+Scatter plots 
+
+```{python}
+#| label: qc-scatter
+fig, axs = plt.subplots(1, 2, figsize=(10,5),constrained_layout=True)
+sc.pl.scatter(adata, x='total_counts', y='pct_counts_mt', color='sample', ax=axs[0],show=False)
+axs[0].set_xscale("log")
+sc.pl.scatter(adata, x='total_counts', y='n_genes_by_counts', color='sample', ax=axs[1],show=False)
+axs[1].set_xscale("log")
+axs[1].set_yscale("log")
+```
+
+
+## Filter cells
+
+Filter for now on:
+
+* nFeatures
+* pct_counts_mt
+* pct_counts_pc
+
+Later, make it adatptive for multiple different qc stats selected. 
+
+For now, have options:
+
+* Fixed/Adaptive - same cutoff for all samples or adaptive cutoff.
+* setting - either the value for fixed, or the number of MADs (default 2)
+* below/above - remove the cells with low/high values on the stat.
+
+Have as default setting for now:
+```
+filtering:
+	n_genes_by_counts: ['fixed',200,'below']
+	pct_counts_mt': ['adaptive',2,'above']
+	pct_counts_pc': ['adaptive',2,'below']
+```
+
+Plot violins for each stat with:
+
+* black solid line at median
+* black dotted line at median * 1,2,3 MAD in both directions
+* red line at decided cutoff
+
+
+```{python}
+#| label: filter-cutoffs
+
+filter_batch = 'sample'    
+if 'filter_batch' in settings['filtering'].keys():
+    filter_batch = settings['filtering']['filter_batch']
+
+# default settings for filtering if not provided in the 
+filter_settings = settings['filtering']['cutoffs']
+
+# group the stats by selected bathch and qc-stats.
+sel = list(set([x[0] for x in filter_settings]))
+sel.append(filter_batch)
+sample_stats = adata.obs.loc[:,sel].groupby(filter_batch)
+
+# calculate mean/median per sample
+median = sample_stats.median()
+mad = sample_stats.mad() 
+
+cells_remove = []
+filtered = {}
+for i in range(len(filter_settings)):
+    [st, kind, cut, direction] = filter_settings[i]
+
+    # define the cutoffs
+    cutoff = {}
+    if kind == 'fixed':
+        for sample in samples: 
+            cutoff[sample] = cut
+        print("Filtering " + st + " for all cells " + direction + " cutoff " + str(cut))
+    elif kind == 'adaptive':
+        if direction == 'below':
+            for sample in samples: 
+                cutoff[sample] = median.loc[sample,st] - mad.loc[sample,st] * cut
+                print("Filtering " + st + " for "+ sample + " below cutoff " + str(cutoff[sample]))
+        elif direction == 'above':
+            for sample in samples: 
+                cutoff[sample] = median.loc[sample,st] + mad.loc[sample,st] * cut
+                print("Filtering " + st + " for "+ sample + " above cutoff " + str(cutoff[sample]))
+        else:
+            print("unknown direction type " + direction + "skipping\n")
+            continue
+    else: 
+        print("unknown filtering type " + kind + "skipping\n")
+        continue 
+
+    # plot
+    fig, axs = plt.subplots(1, 2, figsize=(10,6),constrained_layout=True)
+
+    sc.pl.violin(adata, st, groupby = 'sample', jitter=0.4,  rotation= 45, size = 0.1, show = False, ax = axs[0]) 
+    for (idx,sample) in enumerate(adata.obs['sample'].cat.categories):
+        me = median.loc[sample,st]
+        ma = mad.loc[sample,st]
+        axs[0].hlines(me,idx-0.5,idx+0.5, linewidth=2, color = 'black')
+        axs[0].hlines(me+ma*1,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')
+        axs[0].hlines(me-ma*1,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')
+        axs[0].hlines(me+ma*2,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')
+        axs[0].hlines(me-ma*2,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')
+        axs[0].hlines(me+ma*3,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')
+        axs[0].hlines(me-ma*3,idx-0.5,idx+0.5, linewidth=2, linestyles = 'dotted', color = 'black')    
+        axs[0].hlines(cutoff[sample],idx-0.5,idx+0.5, linewidth=4, color = 'red')
+    axs[0].title.set_text(st)
+    rotate_xticks(axs[0])
+
+
+    # save the filtered cells to a list      
+    if direction == 'below':
+        for sample in samples: 
+            filtered[sample] =   (adata.obs[st] <= cutoff[sample])[adata.obs['sample']==sample]
+    elif direction == 'above':
+        for sample in samples: 
+            filtered[sample] =   (adata.obs[st] >= cutoff[sample])[adata.obs['sample']==sample]
+    
+    for sample in samples:
+        cells_remove.extend(list(filtered[sample].index[filtered[sample]]) )     
+
+    fstats = pd.Series([filtered[sample].sum()/filtered[sample].shape[0]*100 for sample in adata.obs['sample'].cat.categories], index= adata.obs['sample'].cat.categories)
+
+    #fstats = pd.Series([ filtered['sample'].value_counts(normalize=True)[1] * 100 for sample in samples], index = samples)
+    # OBS! Value counts does not work when all are False!!
+    fstats.plot.bar(ax=axs[1])
+    axs[1].title.set_text("Percent filtered cells")   
+    rotate_xticks(axs[1])
+    
+```
+
+```{python}
+# do the final filtering
+before = adata.obs['sample'].value_counts()
+adata = adata[~adata.obs_names.isin(cells_remove),:]
+after = adata.obs['sample'].value_counts()
+stats = pd.concat([before,after], axis=1 )
+stats.columns = ['Before','After']
+stats['Percentage'] = (stats.Before-stats.After)/stats.Before * 100
+
+gc.collect()
+print(stats)
+
+```
+
+
+FIX! Plot each filtering as tabset!
+
+FIX! Order of the samples in violin and barplot should be the same.
+
+## Top genes
+
+
+```{python}
+#| label: top-genes
+
+fig, axs = plt.subplots(3, 3, figsize=(10,10),constrained_layout=True)
+for sample, ax in zip(samples, axs.flatten()):
+    sc.pl.highest_expr_genes(adata[adata.obs['sample']==sample,:], n_top=20, ax=ax, show=False)
+    ax.title.set_text(sample) 
+```
+
+FIX! Dynamic number of subpltos each filtering as tabset!
+
+
+## Filter genes
+
+OBS! Now removing mito genes already earlier..
+
+
+```{python}
+#| label: filter-genes
+
+print(adata.n_vars)
+malat1 = adata.var_names.str.startswith('Malat1')
+# we need to redefine the mito_genes since they were first 
+# calculated on the full object before removing low expressed genes.
+mito_genes = adata.var_names.str.startswith('mt-')
+
+remove = np.add(mito_genes, malat1)
+keep = np.invert(remove)
+adata = adata[:,keep]
+
+print(adata.n_vars)
+```
+
+## Celltypes
+
+Plot again the celltypes after filtering
+
+```{python}
+#| label: celltype-print
+# Stats on proportions per sample. List top 10 celltypes.
+ct_stats2 = {}
+for sample in samples:
+    ct_stats2[sample] = adata[adata.obs['sample'] == sample,:].obs['pruned.labels'].value_counts(normalize=True)
+
+ct_stats2 = pd.concat(ct_stats2.values(), axis=1)
+ct_stats2.columns = samples
+# order by mean
+ct_stats2['mean'] = ct_stats2.mean(axis=1)
+ct_stats2 = ct_stats2.sort_values(by="mean", ascending=False)
+
+print(ct_stats2)
+```
+
+Barplot for top 10 categories
+
+```{python}
+#| label: celltype-plot
+#| fig.width: 12
+
+ct_stats2.head(10).T.plot.bar(stacked=True).legend(loc='center left',bbox_to_anchor=(1.0, 0.5));
+```
+
+
+## Cell sex
+
+Need to add in specific function per species. 
+
+
+## Cellcycle
+
+First read the file with cell cycle genes, from Regev lab and split into S and G2M phase genes. We first download the file.
+
+```{python}
+#| label: fetch-ccgenes
+
+path_data = "https://nextcloud.dc.scilifelab.se/public.php/webdav"
+curl_upass = "zbC5fr2LbEZ9rSE:scRNAseq2025"
+path_cc_file = os.path.join(indir, 'regev_lab_cell_cycle_genes.txt')
+if not os.path.exists(path_cc_file):
+    file_url = os.path.join(path_data, "misc/regev_lab_cell_cycle_genes.txt")
+    subprocess.call(["curl", "-u", curl_upass, "-o", path_cc_file, file_url ])
+
+```
+
+```{python}
+#| label: prep-ccgenes
+cell_cycle_genes = [x.strip() for x in open(path_cc_file)]
+
+# convert to mouse names if needed
+def convert2mousegene(hgenes):
+    hgenes = [s.lower() for s in hgenes]
+    trans = adata.var_names[adata.var_names.str.lower().isin(hgenes)]
+    print("Translated ", str(len(trans)), " out of ", len(hgenes), "human genes\n")
+    return(trans)
+
+
+if settings['species'] == 'mouse':
+    s_genes = convert2mousegene(cell_cycle_genes[:43])
+    g2m_genes = convert2mousegene(cell_cycle_genes[43:])
+
+
+
+```
+
+
+
+WARNING: genes are not in var_names and ignored: Index(['Mlf1Ip', 'Rad51Ap1', 'Casp8Ap2', 'Chaf1B', 'E2F8'], dtype='object')
+    finished: added
+    'S_score', score of gene set (adata.obs).
+    386 total control genes are used. (0:00:04)
+computing score 'G2M_score'
+WARNING: genes are not in var_names and ignored: Index(['Ube2C', 'Top2A', 'Cks1B', 'Fam64A', 'Ckap2L', 'Anp32E', 'Tubb4B',
+       'Kif20B', 'Hn1', 'Cdc25C', 'Kif2C', 'G2E3', 'Gas2L3'],
+
+
+#### Normalize
+
+Before running cell cycle we have to normalize the data. In the scanpy object, the data slot will be overwritten with the normalized data. So first, save the raw data into the slot `raw`. Then run normalization, log transformation and scale the data.
+
+```{python}
+#| label: normalize
+# save raw counts in raw slot.
+adata.raw = adata
+
+# normalize to depth 10 000
+sc.pp.normalize_total(adata, target_sum=1e4)
+
+# logaritmize
+sc.pp.log1p(adata)
+
+# want the unscaled data for later. so scale in a temporary object.
+tmp = adata.copy()
+sc.pp.scale(tmp)
+```
+
+For comparison, run CC prediction with all samples together or each sample separately and compare output.
+
+```{python}
+#| label: cc
+sc.tl.score_genes_cell_cycle(tmp, s_genes=s_genes, g2m_genes=g2m_genes)
+adata.obs['S_score'] = tmp.obs['S_score']
+adata.obs['G2M_score'] = tmp.obs['G2M_score']
+adata.obs['phase'] = tmp.obs['phase']
+
+```
+
+```{python}
+#| label: cc-sample
+
+
+cc_scores = {}
+for sample in samples:
+    cc = sc.tl.score_genes_cell_cycle(tmp[tmp.obs['sample']==sample], s_genes=s_genes, g2m_genes=g2m_genes, copy=True)
+    cc_scores[sample]=cc.obs.iloc[:,-3:]
+
+cc_scores = pd.concat(cc_scores)
+cc_scores = cc_scores.reset_index(level=[0])
+#cc_scores.index.get_level_values(1)
+
+
+adata.obs['S_score2'] = cc_scores['S_score']
+adata.obs['G2M_score2'] = cc_scores['G2M_score']
+adata.obs['phase2'] = cc_scores['phase']
+
+```
+
+```{python}
+del tmp
+gc.collect()
+```
+
+```{python}
+#| label: cc-vln
+%matplotlib inline
+
+fig, axs = plt.subplots(1, 3, figsize=(10,6),constrained_layout=True)
+
+sc.pl.violin(adata, ['S_score'] , jitter=0.4, groupby = 'sample', ax=axs[0], show=False)
+rotate_xticks(axs[0])
+sc.pl.violin(adata, ['G2M_score'] , jitter=0.4, groupby = 'sample', ax=axs[1], show=False)
+rotate_xticks(axs[1])
+sc.pl.scatter(adata, x='S_score', y='G2M_score', color="phase", ax = axs[2])
+pd.crosstab(adata.obs['sample'],adata.obs['phase'])
+
+```
+
+```{python}
+#| label: cc-vln2
+%matplotlib inline
+
+fig, axs = plt.subplots(1, 3, figsize=(10,6),constrained_layout=True)
+sc.pl.violin(adata, ['S_score2'] , jitter=0.4, groupby = 'sample', ax=axs[0], show=False)
+rotate_xticks(axs[0])
+sc.pl.violin(adata, ['G2M_score2'] , jitter=0.4, groupby = 'sample', ax=axs[1], show=False)
+rotate_xticks(axs[1])
+sc.pl.scatter(adata, x='S_score2', y='G2M_score2', color="phase2", ax = axs[2])
+pd.crosstab(adata.obs['sample'],adata.obs['phase2'])
+
+```
+
+Clearly different results with all together vs each one separately.
+
+## Scrublet - Doublet prediction 
+
+For doublet detection, we will use the package `Scrublet`, so first we need to get the raw counts from `adata.raw.X` and run scrublet with that matrix. Then we add in the doublet prediction info into our anndata object.
+
+Doublet prediction should be run for each dataset separately, so first we need to split the adata object into 6 separate objects, one per sample and then run scrublet on each of them.
+
+```{python}
+#| label: doublet
+#| eval: true
+import scrublet as scr
+
+# split per batch into new objects.
+batches = adata.obs['sample'].cat.categories.tolist()
+scrubdata = {}
+for batch in batches:
+    tmp = adata[adata.obs['sample'] == batch,]
+    print(batch, ":", tmp.shape[0], " cells")
+    scrub = scr.Scrublet(tmp.raw.X)
+    out = scrub.scrub_doublets(verbose=False, n_prin_comps = 20)
+    scrubdata[batch] = pd.DataFrame({'doublet_score':out[0],'predicted_doublets':out[1]},index = tmp.obs.index)
+    print(scrubdata[batch].predicted_doublets.sum(), " predicted_doublets")
+```
+
+```{python}
+#| label: add-doublet
+#| eval: true
+#| 
+# add predictions to the adata object.
+scrub_pred = pd.concat(scrubdata.values())
+adata.obs['doublet_scores'] = scrub_pred['doublet_score'] 
+adata.obs['predicted_doublets'] = scrub_pred['predicted_doublets'] 
+
+sum(adata.obs['predicted_doublets'])
+```
+
+Plot number of genes per cell split by doublet scores
+
+```{python}
+#| label: plot-doublet
+#| fig-height: 5
+#| fig-width: 12
+#| eval: true
+
+%matplotlib inline
+
+adata.obs['doublet_info'] = adata.obs["predicted_doublets"].astype(str)
+ax = sns.violinplot(data=adata.obs, x='sample', y='n_genes_by_counts', hue="doublet_info",  split=False, inner="quart", linewidth=1)  
+rotate_xticks(ax)
+fig.show()
+
+```
+
+Filter out the predicted doublets
+
+
+```{python}
+#| label: doublet-filt
+#| eval: true
+
+adata = adata[adata.obs['doublet_info'] == 'False',:]
+print(adata.shape)
+adata.obs["sample"].value_counts()
+
+```
+
+
+FIX? Run as separate function?
+
+
+## Umap and clustering
+
+Run a quick analysis with default settings in umap and clustering. For now, regression on percent mitochondria an number of genes
+
+```{python}
+#| label: run-umap
+#| eval: true
+
+sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5, batch_key = 'sample')
+adata = adata[:, adata.var.highly_variable]
+sc.pp.regress_out(adata, ['n_genes_by_counts', 'pct_counts_mt'])
+sc.pp.scale(adata, max_value=10)
+sc.tl.pca(adata, svd_solver='arpack')
+sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
+sc.tl.umap(adata)
+sc.tl.leiden(adata, resolution = 0.6, key_added = "leiden_0.6")
+
+```
+
+
+Visualize on umap/clusters:
+
+* all qc stats
+* celltypes
+* Doublet scores
+* CC scores
+
+
+```{python}
+#| label: plot-umap
+#| eval: true
+
+%matplotlib inline
+sc.pl.umap(adata, color=['sample','leiden_0.6','pruned.labels'])
+
+# proprtion of clusters vs samples.
+tmp = pd.crosstab(adata.obs['leiden_0.6'],adata.obs['sample'], normalize='index')
+tmp.plot.bar(stacked=True).legend(bbox_to_anchor=(1.4, 1), loc='upper right')
+
+tmp = pd.crosstab(adata.obs['sample'],adata.obs['leiden_0.6'], normalize='index')
+tmp.plot.bar(stacked=True).legend(bbox_to_anchor=(1.4, 1), loc='upper right')
+
+
+
+```
+
+Plot all metadata
+
+```{python}
+meta_plot = list(meta.columns[:-2])
+sc.pl.umap(adata, color=meta_plot, ncols=2, cmap = 'viridis_r')
+```
+
+Plot QC stats, doublet scores, CC scores
+
+```{python}
+sc.pl.umap(adata, color=plot_stats, ncols=3, cmap = 'viridis_r')
+
+```
+
+
+## Save file
+
+```{python}
+#| label: save
+adata.write_h5ad(os.path.join(resdir,"all_filt.h5ad"))
+```
+
+
+<details>
+  <summary>Click here</summary>
+
+```{python}
+#| label: session
+sc.logging.print_versions()
+```
+
+</details>
