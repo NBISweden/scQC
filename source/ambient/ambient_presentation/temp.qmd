@@ -1,0 +1,194 @@
+---
+title: Ambient RNA removal
+author: Åsa Björklund
+format:
+  revealjs:
+    df-print: kable
+execute:
+  echo: false
+bibliography: references.bib
+---
+
+## Background
+
+
+## Ambient removal paper
+
+
+
+
+## Setup {visibility="hidden"}
+
+
+```{python}
+#| label: yaml-load
+import yaml
+with open('./../../source/all_qc/settings.yml', 'r') as f:
+    settings = yaml.load(f, Loader=yaml.SafeLoader)
+```
+
+
+```{python}
+#| label: paths
+
+import os
+
+resdir = settings['outdir']
+if not os.path.exists(resdir):
+    os.makedirs(resdir)
+
+#dropsdir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse/output/emptydrops/"
+#singlerdir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse/output/singler/"
+#
+samples = list(settings['samples'].keys())
+#["GSM6757771_rep1","GSM6757772_rep2","GSM6757773_rep3","GSM6757774_nuc2","GSM6757775_nuc3"]
+
+for sample in samples:
+    sdir = os.path.join(resdir,sample)
+    if not os.path.exists(sdir):
+        os.makedirs(sdir)
+
+```
+
+```{python}
+#| label: libraries
+
+import gc
+import numpy as np
+import scanpy as sc
+import warnings
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import subprocess
+import anndata
+import seaborn as sns
+from IPython.display import display, Markdown
+
+warnings.simplefilter(action='ignore', category=Warning)
+
+# verbosity: errors (0), warnings (1), info (2), hints (3)
+sc.settings.verbosity = 3
+sc.settings.set_figure_params(dpi=80)
+
+%matplotlib inline
+```
+
+```{python}
+#| label: functions
+
+def rotate_xticks(ax, size=8, rotation=45):
+    ax.set_xticklabels(ax.get_xticklabels(), rotation = rotation, size=size, ha='right')
+```
+
+
+## Metadata
+
+```{python}
+#| label: meta-sankey
+
+import pandas as pd
+import plotly.graph_objects as go
+import os
+
+allmeta = [settings['samples'][sample]['meta'] for sample in settings['samples'].keys()]
+meta = pd.DataFrame.from_dict(allmeta)
+meta.index = settings['samples'].keys()
+meta['sample'] = meta.index
+meta['idx'] = range(0,meta.shape[0])
+
+dims = []
+for var in meta.columns[:-2]:
+    dims.append(go.parcats.Dimension(values=meta[var], label=var, categoryorder='category ascending'))
+
+
+fig = go.Figure(data = [go.Parcats(dimensions=[x for x in dims],
+        line={'color': meta.idx})])
+
+# could not get the plotly to display, instead save as static image.
+if not os.path.exists("assets"):
+    os.mkdir("assets")
+
+fig.write_image("assets/metadata.png")
+```
+![](assets/metadata.png)
+
+
+## Cell calling
+
+- EmptyDrops - defines true cells as ones with signal significantly different from background.
+- Cellbender - similar idea, also corrects for background signal 
+- Cellranger - just uses barcode rank plot.
+
+## Additional tools
+
+- Does not do cell calling, just background estimate:
+- SoupX
+- DecontX 
+
+## What is differential gene expression?
+
+::: {.columns}
+::: {.column width="40%"}
+
+
+:::
+::: {.column width="60%"}
+
+
+:::
+:::
+
+. . . 
+
+Count data -> statistical analysis -> Are differences significant (greater than expected randomly)
+
+:::{.notes}
+DGE is basically comparing two groups of samples to identify if gene expression differs significantly. The end result is a table of genes with effect size (fold-change) and significance (p values).
+:::
+
+## What is differential gene expression?
+
+
+:::{.notes}
+Sometimes, it's easy to visually identify if the expression of a gene is significantly different between groups and in which direction. If the samples overlap or the spread is too high, it might be harder.
+:::
+
+
+
+## Things to think about
+
+- Which data should I use? Raw? Normalized? Log Normalized?
+  - Depends on test/method
+- Check that DEGs are not just a result of some batch effect
+- Batch effects can be corrected using covariates
+- How many cells do I need for reliable DGE?
+  - Highly expressed genes: 10-20 cells?
+  - Lowly expressed genes: 20-50 cells?
+  - Also depends on quality of library prep
+- Distinctness of cell types
+- Differentiate between noise and signal
+  - Any comparison will produce some DEGs
+
+:::{.notes}
+For highly expressed genes, 
+:::
+
+## Conclusion
+
+- Important to understand what you are trying to compare: mean expression vs probability of being expressed
+- Important to understand the data
+- Take into account single-cell specific nuances
+- Models can get complicated
+- Important to assess and validate the results
+- Most tests give similar results for top genes but p values might differ.
+- Fold changes can't be interpreted the same way as bulk rnaseq
+- Too many cells can give extremely low p values
+
+## References
+
+::: {#refs}
+:::
+
+## Acknowledgements
+
+Slides adapted from previous presentations by Olga Dethlefson and Åsa Björklund.

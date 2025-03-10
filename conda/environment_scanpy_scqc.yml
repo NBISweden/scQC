@@ -38,6 +38,7 @@ dependencies:
   - fa2
   - plotly
   - python-kaleido # static image export
+  - jupyter-cache 
   
 #  - mathjax # testing if needed for plotly 
 #  - cellrank=2.0.6 # testing, possibly remove if not used.

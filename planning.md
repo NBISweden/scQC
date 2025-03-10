@@ -17,7 +17,7 @@
 - Gene biotype proportions per sample.
 - Stress signal?
 - Umap colored by different features, also per dataset??
-
+- Inputs/outputs - should be able to take cellranger, parse output as well as Seurat-object, SCE, AnnData. Also, different output options.
 
 #### Possible additions in future
 - Hashing
