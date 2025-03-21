@@ -27,6 +27,15 @@ sfiles = dir(indir,"raw")
 #split.idx = 1:2
 #sfiles = dir(indir,"mtx")
 
+
+# The human data all have mtx format 
+indir="/Users/asabjor/projects/sc-devop/scQC/data/human/GSE229617"
+resdir="/Users/asabjor/projects/sc-devop/scQC/data/human/output"
+split.idx = 1:2
+sfiles = list.dirs(indir, full.names=F)[-1]
+
+
+
 ###############################################
 
 force = FALSE # force rerun  pipeline.
@@ -84,8 +93,14 @@ run_seurat = function(counts, resolutions = c(0.2,0.4,0.6, 0.8,1.0), force = F, 
 ###############################################
 # run one sample at a time
 
-for (sfile in sfiles){ 
-  sname = paste(unlist(strsplit(sfile,"_"))[split.idx], collapse = "_")
+for (sfile in sfiles){
+  if (grepl("parse[12]$",sfile) ) { next }
+  if (grepl("parse",sfile)){
+     sname = sub("/","_",sfile)
+  }else{
+     sname = paste(unlist(strsplit(sfile,"_"))[split.idx], collapse = "_")
+     sname = gsub("_NA","",sname)
+  }
   raw_file = file.path(indir,sfile)
   seu_file = file.path(resdir,sname,"sobj_unfiltered.rds")
   cb_file =  file.path(resdir,sname,"cellbender","cellbender_out_cell_barcodes.csv")
@@ -95,9 +110,14 @@ for (sfile in sfiles){
 
   if (grepl(".h5", sfile)){
     counts.raw = Read10X_h5(raw_file)
+  }else if (dir.exists(raw_file)){ # if it is a directory instead.
+    counts.raw = Read10X(raw_file)	
   }else{
     counts.raw = read_mtx(sfile,indir)
   }
+  # for multiseq returns a list of matrices
+  if (class(counts.raw) == 'list'){ counts.raw = counts.raw[["Gene Expression"]] } 
+
   cb_barcodes = read.csv(cb_file, header = F)
   counts.filt = counts.raw[,cb_barcodes[,1]]
   
@@ -107,26 +127,46 @@ for (sfile in sfiles){
   
   for (res in resolutions) { 
     print(sprintf("running resolution: %.1f",res))
+    clust = paste0("RNA_snn_res.",as.character(res))
+    if (nrow(unique(sobj[[clust]])) == 1) { cat("Only a single cluster for ", sfile, " at resolution", clust, "\n"); next}
+
+
     outfile = file.path(outdir,paste0("soupX_cormat_",res,".h5"))
     if (file.exists(outfile) & !force){
       print(paste0("file exists: ",outfile))
       next
     }
     
-    plotfile = file.path(outdir,paste0("soupX_stats_",res,".pdf"))
-    pdf(plotfile)
+#    plotfile = file.path(outdir,paste0("soupX_stats_",res,".pdf"))
+#    pdf(plotfile)
     
-    clust = paste0("RNA_snn_res.",as.character(res))
-    p1 = DimPlot(sobj, group.by = clust, label = T) + NoAxes() 
-    print(p1)
+   
+#    p1 = DimPlot(sobj, group.by = clust, label = T) + NoAxes() 
+#    print(p1)
     
     # create soup object
     sc = SoupChannel(counts.raw, counts.filt, calcSoupProfile = FALSE)
     sc = estimateSoup(sc)
   
-    # need to have cluster information!!
+    # need to add cluster information
     sc = setClusters(sc, setNames(sobj[[clust]][,1], colnames(sobj)))
-    sc = autoEstCont(sc, forceAccept = TRUE)
+
+    # check first if any genes pass the filters
+    mrks = quickMarkers(sc$toc,sc$metaData$clusters,N=Inf)
+    tf.cut = 1 #default value.
+    gene_pass = intersect(mrks$gene[mrks$tfidf>tf.cut], rownames(sc$soupProfile)[sc$soupProfile$est>quantile(sc$soupProfile$est,0.9)])
+    if (length(gene_pass) <= 10){
+       tf.cut = quantile(mrks$tfidf,0.98)
+       gene_pass = intersect(mrks$gene[mrks$tfidf>tf.cut], rownames(sc$soupProfile)[sc$soupProfile$est>quantile(sc$soupProfile$est,0.9)])
+       if (length(gene_pass) < 10) {
+       	  cat("Not enough genes for soupX, skipping ", outfile)
+	  next
+       }
+    } 
+
+    sc = autoEstCont(sc, forceAccept = TRUE, tfidfMin=tf.cut)
+    
+
     if (sc$fit$rhoEst > max.rho) { 
       sc = setContaminationFraction(sc, max.rho)
     }
@@ -134,7 +174,7 @@ for (sfile in sfiles){
     # plot top bg markers, gives error with high contaminant fraction.
     #p = plotMarkerDistribution(sc)
     #print(p)
-    dev.off()  
+    #dev.off()  
 
         # adjusted counts
     out = adjustCounts(sc)

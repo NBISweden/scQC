@@ -32,6 +32,7 @@ with open('./settings.yml', 'r') as f:
 
 
 ```{python}
+#| label: libraries
 import os
 import glob
 import numpy as np
@@ -63,6 +64,7 @@ Make broader groupings:
 * other - all other categories.
 
 ```{python}
+#| label: load-annot
 
 indir = "/Users/asabjor/projects/sc-devop/scQC/data/mouse"
 cbdir = os.path.join(indir,"output")
@@ -95,6 +97,7 @@ Then read in all the raw and cellbender, soupX, decontX files. For soupX select 
 For soupX and decontX output is not in integer counts, round the values!
 
 ```{python}
+#| label: functions
 # does not work to read in the cellbender files from GSE244142 with sc.read_10x_h5
 # gives zero genes.
 # minor modifications of the scanpy function, now works to load the data!
@@ -187,8 +190,7 @@ def _read_v3_10x_h5(filename, *, start=None):
 
 
 ```{python}
-#pdirs = glob.glob(indir + "/GSE*")
-
+#| label: load-data
 
 alldata = {}
 emptydrops_genes = {}
@@ -323,6 +325,7 @@ Calculate rank plot based on cellranger total counts.
 
 
 ```{python}
+#| label: plot-func
 
 from matplotlib_venn import venn3
 import matplotlib.patches as mpatches
@@ -397,6 +400,7 @@ def plot_general_stats(tmp,name):
 
 ```{python}
 #| output: asis
+#| label: barcode-plot
 for sname in alldata.keys():
     plot_general_stats(alldata[sname], sname)
 ```
@@ -411,6 +415,7 @@ Weird histograms for some samples, especially the SAM samples.
 Proportion filtered per cell
 
 ```{python}
+#| label: filt-stat
 #| collapse: true
 
 all_methods = ["CB","SX02","SX08","DX"]
@@ -439,35 +444,46 @@ Plot fraction filtered per gene vs total counts before filtering. Color genes by
 * purple = other (all other classes, plus ones not in latest biomart ensembl version)
 
 ```{python}
+#| label: plot-func2
 
 colors=sns.color_palette('Set1')
 gene_colors={'pc': colors[0], 'lncRNA': colors[1], 'mt':colors[2], 'other':colors[3]} 
 hexcols = colors.as_hex()
 gene_colors_hex = {'pc': hexcols[0], 'lncRNA': hexcols[1], 'mt':hexcols[2], 'other':hexcols[3]} 
 
-def plot_gene_proportions(df,title=" ", nPlot=20):
+def plot_gene_proportions(df,sname=" ", nPlot=10):
     df = df.loc[df.raw_total_counts > 0,:]
     df['Clog'] = np.log1p(df['raw_total_counts'])
 
     fig, axs = plt.subplots(1, 5, figsize=(10,4),constrained_layout=True)
     for i,n in enumerate(all_methods):
-        # select sels to annotate
+        if not df.columns.isin( [n+'_propFilt']).any(): continue
         df[n+"_rank"]= df[n+'_propFilt'] * df['Clog']
         df = df.sort_values(by=n+"_rank", axis=0, ascending=False)
         sel = df.head(nPlot)
-
         sns.scatterplot(df, x='Clog',y=n+'_propFilt',hue='gene_class', palette=gene_colors,  legend=False, ax=axs[i])
         axs[i].title.set_text(n)
-
+        axs[i].set_xlabel('')
+        axs[i].set_ylabel('')
         # annotate points in axis
         for idx, row in sel.iterrows():
-            axs[i].annotate(idx, ( row['Clog'],row[n+'_propFilt']), rotation = 45, size='x-small')
-        fig.suptitle(title)
+            axs[i].annotate(idx, ( row['Clog'],row[n+'_propFilt']), rotation = 45, fontsize=6)
+        fig.suptitle(sname)
+
     gstats = emptydrops_genes[sname]
-    topA = gstats['ambient'].sort_values(ascending=False).head(20).index
-    gstats['ambient'][topA].plot.bar(ax=axs[4])
+    gstats = gstats.loc[gstats.index.isin(df.index),:]
+    topA = gstats['ambient'].sort_values(ascending=False).head(nPlot).index
+    gstats = gstats.loc[topA,:]
+    gstats['gene_class'] = df['gene_class'][gstats.index]
+    gstats['gene'] = gstats.index    
+
+    sns.barplot(gstats, x='gene',y='ambient',hue='gene_class', palette=gene_colors, ax=axs[4])
     axs[4].title.set_text("EmptyDrops score")
-    rotate_xticks(axs[4])    
+    axs[4].set_xlabel('')
+    axs[4].set_ylabel('')
+    axs[4].legend(fontsize=8)
+    rotate_xticks(axs[4], size=6)    
+
 
 def rotate_xticks(ax, size=8, rotation=45):
     ax.set_xticklabels(ax.get_xticklabels(), rotation = rotation, size=size, ha='right')
@@ -475,9 +491,10 @@ def rotate_xticks(ax, size=8, rotation=45):
 
 ```{python}
 #| collapse: true
+#| label: plot-genes
 
 for sname in alldata.keys():
-    plot_gene_proportions(alldata[sname].var, title = sname)
+    plot_gene_proportions(alldata[sname].var, sname)
 
 ```
 
@@ -490,6 +507,7 @@ Violin plots after filtering and raw.
 
 ```{python}
 #| collapse: true
+#| label: plot-vln
 
 qc_plot = ["mt","hb","pc"]
 plot_feats = [m + "_pct_counts_" + q for q in qc_plot for m in ["raw"] + all_methods ]
@@ -516,6 +534,7 @@ Calculate total proportions of all biotypes per layer.
 "Total" is the proportions in the full raw matrix also containing empty droplets, while raw is the same stats taking the subset of cells selected by cellbender.
 
 ```{python}
+#| label: plot-func3
 
 def plot_biotypes(df,title,ax):
     tmp = df.loc[:,df.columns.str.contains("total_counts|gene_class")]
@@ -531,7 +550,7 @@ def plot_biotypes(df,title,ax):
 
 ```{python}
 #| collapse: true
-
+#| label: plot-biotype
 qc_plot = ["total_counts","n_genes_by_counts"]
 plot_feats = [m + "_" + q for q in qc_plot for m in ["raw"] + all_methods ]
 

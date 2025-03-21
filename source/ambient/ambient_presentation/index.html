@@ -361,6 +361,12 @@
 </section>
 <section id="background" class="slide level2">
 <h2>Background</h2>
+<ul>
+<li>RNA may be released from broken cells and float around in the “Soup”.</li>
+<li>Can create large batch effects</li>
+<li>Info on ambient profile used for calling cells.</li>
+</ul>
+<p><img data-src="assets/ambient_rna.jpeg" class="quarto-figure quarto-figure-center" width="800"> <span class="small"><span class="citation" data-cites="heumos2023best-practices">Heumos et al. (<a href="#/references" role="doc-biblioref" onclick="">2023</a>)</span></span></p>
 </section>
 <section id="methods-for-ambient-estimation" class="slide level2">
 <h2>Methods for ambient estimation</h2>
@@ -414,11 +420,11 @@
 <h2>Evaluation paper</h2>
 <p><img data-src="assets/janssen_2023_fig6.jpeg" class="quarto-figure quarto-figure-center" height="550"> <span class="small"><span class="citation" data-cites="janssen2023ambient">Janssen et al. (<a href="#/references" role="doc-biblioref" onclick="">2023</a>)</span></span></p>
 </section>
-<section id="samples" class="slide level2">
-<h2>Samples</h2>
+<section id="mouse-samples" class="slide level2">
+<h2>Mouse Samples</h2>
 <p>Mouse samples from GEO with raw cellranger matrices:</p>
 <ul>
-<li>GSE218853 - Comparison paper, mixed strain kidney samples, sc/sn, 5 samples: rep1, rep2, rep3, nuc1, nuc2</li>
+<li>GSE218853 - Janssen paper, mixed strain kidney samples, sc/sn, 5 samples: rep1, rep2, rep3, nuc1, nuc2</li>
 <li>GSE213825 - root ganglia scRNAseq, 16 samples, Names SAM24349928-SAM24374041</li>
 <li>GSE261852 - mouse CAR-T cells, scRNAseq, 2 samples, spl1, spl2</li>
 </ul>
@@ -438,86 +444,102 @@
 <section id="methods" class="slide level2">
 <h2>Methods</h2>
 <ul>
-<li>SoupX - run at 2 different resolutions 0.2 and 0.8</li>
-<li>DecontX</li>
-<li>Cellbender</li>
-<li>EmptyDrops (OBS! no correction) - suggested cutoff at 0.05</li>
+<li>Cell calling:
+<ul>
+<li>Cellbender (CB)</li>
+<li>EmptyDrops (OBS! no correction) - suggested cutoff at 0.05 (ED)</li>
+<li>Cellranger inflection point if available (CR)</li>
+</ul></li>
+<li>Ambient Removal:
+<ul>
+<li>SoupX - run at 2 different clustering resolutions 0.2 and 0.8 (SX02, SX08)</li>
+<li>DecontX (DX)</li>
+<li>Cellbender (CB)</li>
+</ul></li>
 </ul>
-<div id="data-load" class="cell" data-execution_count="6">
-<div class="cell-output cell-output-stdout">
-<pre><code>GSM6757771_rep1
-rep1
-Done rep1
-GSM6757772_rep2
-rep2
-Done rep2
-GSM6757773_rep3
-rep3
-Done rep3
-GSM6757774_nuc2
-nuc2
-Done nuc2
-GSM6757775_nuc3
-nuc3
-Done nuc3
-GSE261852_CI82_spl1
-spl1
-Done spl1
-GSE261852_CI82_spl2
-spl2
-Done spl2
-GSM6594872_SAM24349928
-SAM24349928
-Done SAM24349928
-GSM6594883_SAM24374037
-SAM24374037
-Done SAM24374037</code></pre>
-</div>
-</div>
+<p>For downstream analysis, use the called cells from Cellbender.</p>
 </section>
 <section id="barcode-rank-plots" class="slide level2">
 <h2>Barcode rank plots</h2>
+<div style="font-size: 50%;">
 <div class="panel-tabset">
-<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">rep1</a></li><li><a href="#tabset-1-2">rep2</a></li><li><a href="#tabset-1-3">rep3</a></li><li><a href="#tabset-1-4">nuc2</a></li><li><a href="#tabset-1-5">nuc3</a></li><li><a href="#tabset-1-6">spl1</a></li><li><a href="#tabset-1-7">spl2</a></li><li><a href="#tabset-1-8">SAM24349928</a></li><li><a href="#tabset-1-9">SAM24374037</a></li></ul>
+<ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">GSM6757771_rep1</a></li><li><a href="#tabset-1-2">GSM6757772_rep2</a></li><li><a href="#tabset-1-3">GSM6757773_rep3</a></li><li><a href="#tabset-1-4">GSM6757774_nuc2</a></li><li><a href="#tabset-1-5">GSM6757775_nuc3</a></li><li><a href="#tabset-1-6">GSE261852_CI82_spl1</a></li><li><a href="#tabset-1-7">GSE261852_CI82_spl2</a></li><li><a href="#tabset-1-8">GSM6594872_SAM24349928</a></li><li><a href="#tabset-1-9">GSM6594883_SAM24374037</a></li></ul>
 <div class="tab-content">
 <div id="tabset-1-1">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-2.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-2.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-2">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-5.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-5.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-3">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-8.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-8.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-4">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-11.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-11.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-5">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-14.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-14.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-6">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-17.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-17.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-7">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-20.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-20.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-8">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-23.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-23.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
 </div>
 <div id="tabset-1-9">
-<p><img data-src="index_files/figure-revealjs/cell-8-output-26.png" width="809" height="489"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/barcode-plot-output-26.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
 </div>
 </div>
 </div>
 </section>
 <section id="filtering-stats-all-methods" class="slide level2">
 <h2>Filtering stats all methods</h2>
-<p>Proportion filtered per cell</p>
-<div id="cell-filtering-vln" class="cell" data-collapse="true" data-execution_count="9">
-<div class="cell-output cell-output-display">
-<div>
+<p>Proportion filtered per cell and method</p>
+<div id="6a02ffbd" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/filtering-vln-output-1.png" id="filtering-vln" width="809" height="649"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/filt-stat-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
 </figure>
 </div>
 </div>
@@ -526,74 +548,79 @@ Done SAM24374037</code></pre>
 <section id="gene-stats" class="slide level2">
 <h2>Gene stats</h2>
 <p>Plot fraction filtered per gene vs total counts before filtering. Color genes by:</p>
+<div style="font-size: 50%;">
 <ul>
 <li>green = mt</li>
 <li>red = pc</li>
 <li>blue = lincRNA</li>
 <li>purple = other (all other classes, plus ones not in latest biomart ensembl version)</li>
 </ul>
-<div id="gene-stats-plot" class="cell" data-collapse="true" data-execution_count="11">
-<div class="cell-output cell-output-display">
-<div>
+<div class="panel-tabset">
+<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">GSM6757771_rep1</a></li><li><a href="#tabset-2-2">GSM6757772_rep2</a></li><li><a href="#tabset-2-3">GSM6757773_rep3</a></li><li><a href="#tabset-2-4">GSM6757774_nuc2</a></li><li><a href="#tabset-2-5">GSM6757775_nuc3</a></li><li><a href="#tabset-2-6">GSE261852_CI82_spl1</a></li><li><a href="#tabset-2-7">GSE261852_CI82_spl2</a></li><li><a href="#tabset-2-8">GSM6594872_SAM24349928</a></li><li><a href="#tabset-2-9">GSM6594883_SAM24374037</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-1.png" id="gene-stats-plot-1" width="969" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-1.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-2">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-2.png" id="gene-stats-plot-2" width="969" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-2.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-3">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-3.png" id="gene-stats-plot-3" width="969" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-3.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-4">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-4.png" id="gene-stats-plot-4" width="974" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-4.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-5">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-5.png" id="gene-stats-plot-5" width="974" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-5.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-6">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-6.png" id="gene-stats-plot-6" width="970" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-6.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-7">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-7.png" id="gene-stats-plot-7" width="973" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-7.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-8">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-8.png" id="gene-stats-plot-8" width="969" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-8.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
 </div>
 </div>
-<div class="cell-output cell-output-display">
-<div>
+<div id="tabset-2-9">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/gene-stats-plot-output-9.png" id="gene-stats-plot-9" width="969" height="329"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-genes-output-9.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
 </figure>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -601,26 +628,361 @@ Done SAM24374037</code></pre>
 <section id="qc-stats" class="slide level2">
 <h2>QC stats</h2>
 <p>Violin plots after filtering and raw.</p>
-<div id="cell-qc-stats" class="cell" data-collapse="true" data-execution_count="12">
-<div class="cell-output cell-output-display">
-<div>
+<p>Generally more high mito cells after CB filtering.</p>
+<div id="1b0d46a0" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/qc-stats-output-1.png" id="qc-stats" width="809" height="649"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-vln-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Generally more high mito cells after CB filtering.</p>
 </section>
 <section id="biotype-proportions" class="slide level2">
 <h2>Biotype proportions</h2>
-<p>Calculate total proportions of all biotypes per layer.</p>
-<p>“Total” is the proportions in the full raw matrix also containing empty droplets, while raw is the same stats taking the subset of cells selected by cellbender.</p>
-<div id="cell-biotype-plot" class="cell" data-collapse="true" data-execution_count="14">
-<div class="cell-output cell-output-display">
-<div>
+<div style="font-size: 50%;">
+<ul>
+<li>“Total” is the full raw matrix also containing empty droplets.</li>
+<li>“Raw” is the subset of cells selected by cellbender before removing ambient.</li>
+<li>All other contain the same set of cells as “Raw” but after ambient removal.</li>
+</ul>
+</div>
+<div id="c4e9ee2a" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="index_files/figure-revealjs/biotype-plot-output-1.png" id="biotype-plot" width="809" height="649"></p>
+<p><img data-src="../analysis/ambient_methods_overview_wED_files/figure-html/plot-biotype-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="conclusion" class="slide level2">
+<h2>Conclusion</h2>
+<ul>
+<li>Often seem to be top expressed genes that are also top ambient genes.</li>
+</ul>
+</section>
+<section id="human-data" class="slide level2">
+<h2>Human data</h2>
+
+<img data-src="assets/gezelius_title.png" class="r-stretch"><ul>
+<li>Treated human cell lines with 5 drugs and Ctrl.</li>
+<li>2 Parse runs with all 6 samples</li>
+<li>1 10X multi run with all 6 samples</li>
+<li>2 10X fixed protocol with 3 samples on each.</li>
+</ul>
+<p><span class="small"><span class="citation" data-cites="gezelius2024parsecomp">Gezelius et al. (<a href="#/references" role="doc-biblioref" onclick="">2024</a>)</span></span></p>
+</section>
+<section id="barcode-rank-plot" class="slide level2">
+<h2>Barcode rank plot</h2>
+<div style="font-size: 50%;">
+<div class="panel-tabset">
+<ul id="tabset-3" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-3-1">fixed1_5-Azacytidine</a></li><li><a href="#tabset-3-2">fixed1_Dexamethasone</a></li><li><a href="#tabset-3-3">fixed1_XRP44X</a></li><li><a href="#tabset-3-4">fixed2_Fludarabine</a></li><li><a href="#tabset-3-5">fixed2_Imatinib</a></li><li><a href="#tabset-3-6">fixed2_Control</a></li><li><a href="#tabset-3-7">multiseq</a></li><li><a href="#tabset-3-8">parse1_all</a></li><li><a href="#tabset-3-9">parse2_all</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-2.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-2">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-5.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-3">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-8.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-4">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-11.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-5">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-14.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-6">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-17.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-7">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-20.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-8">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-23.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-3-9">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/barcode-plot-output-26.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="gene-stats-1" class="slide level2">
+<h2>Gene stats</h2>
+<p>Plot fraction filtered per gene vs total counts before filtering. Color genes by:</p>
+<div style="font-size: 50%;">
+<ul>
+<li>green = mt</li>
+<li>red = pc</li>
+<li>blue = lincRNA</li>
+<li>purple = other (all other classes, plus ones not in latest biomart ensembl version)</li>
+</ul>
+<div class="panel-tabset">
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">fixed1_5-Azacytidine</a></li><li><a href="#tabset-4-2">fixed1_Dexamethasone</a></li><li><a href="#tabset-4-3">fixed1_XRP44X</a></li><li><a href="#tabset-4-4">fixed2_Fludarabine</a></li><li><a href="#tabset-4-5">fixed2_Imatinib</a></li><li><a href="#tabset-4-6">fixed2_Control</a></li><li><a href="#tabset-4-7">multiseq</a></li><li><a href="#tabset-4-8">parse1_all</a></li><li><a href="#tabset-4-9">parse2_all</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-1.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-2">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-2.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-3">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-3.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-4">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-4.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-5">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-5.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-6">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-6.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-7">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-7.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-8">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-8.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-4-9">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-genes-output-9.png" class="nostretch quarto-figure quarto-figure-center" height="350"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="biotype-proportions-1" class="slide level2">
+<h2>Biotype proportions</h2>
+<div style="font-size: 50%;">
+<ul>
+<li>“Total” is the full raw matrix also containing empty droplets.</li>
+<li>“Raw” is the subset of cells selected by cellbender before removing ambient.</li>
+<li>All other contain the same set of cells as “Raw” but after ambient removal.</li>
+</ul>
+</div>
+<div id="d95f637f" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_files/figure-html/plot-biotype-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="parse-background-and-cell-calling" class="slide level2">
+<h2>Parse background and cell calling</h2>
+
+<img data-src="assets/parse-evercode.png" class="r-stretch"><ul>
+<li>Unclear from documentation if barcode ranks should be done by plate, sample or well.</li>
+<li>Probably too few cells for running per well.</li>
+<li>Parse pipeline only stores barcodes with &gt;= 10 reads.</li>
+</ul>
+</section>
+<section id="parse-cell-calls" class="slide level2">
+<h2>Parse cell calls</h2>
+<div id="1e4fc308" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/parse-filtering-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="parse-barcode-rank-plot" class="slide level2">
+<h2>Parse barcode rank plot</h2>
+<div style="font-size: 50%;">
+<div class="panel-tabset">
+<ul id="tabset-5" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-5-1">parse1_all</a></li><li><a href="#tabset-5-2">parse1_5-Azacytidine</a></li><li><a href="#tabset-5-3">parse1_Fludarabine</a></li><li><a href="#tabset-5-4">parse1_XRP44X</a></li><li><a href="#tabset-5-5">parse1_Control</a></li><li><a href="#tabset-5-6">parse1_Dexamethasone</a></li><li><a href="#tabset-5-7">parse1_Imatinib</a></li><li><a href="#tabset-5-8">parse2_all</a></li><li><a href="#tabset-5-9">parse2_5-Azacytidine</a></li><li><a href="#tabset-5-10">parse2_Fludarabine</a></li><li><a href="#tabset-5-11">parse2_XRP44X</a></li><li><a href="#tabset-5-12">parse2_Control</a></li><li><a href="#tabset-5-13">parse2_Dexamethasone</a></li><li><a href="#tabset-5-14">parse2_Imatinib</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-2.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-2">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-5.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-3">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-8.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-4">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-11.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-5">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-14.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-6">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-17.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-7">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-20.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-8">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-23.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-9">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-26.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-10">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-29.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-11">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-32.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-12">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-35.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-13">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-38.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+<div id="tabset-5-14">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/barcode-plot-output-41.png" class="nostretch quarto-figure quarto-figure-center" height="550"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="parse-ambient-profiles" class="slide level2">
+<h2>Parse ambient profiles</h2>
+<div id="209337f5" class="cell" data-execution_count="13">
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="../analysis/ambient_methods_overview_hsa_parse_files/figure-html/ambient-overlap2-output-1.png" class="quarto-figure quarto-figure-center" height="550"></p>
 </figure>
 </div>
 </div>
@@ -632,6 +994,7 @@ Done SAM24374037</code></pre>
 <li><p>Correct or not correct?</p></li>
 <li><p>What should we recommend?</p></li>
 <li><p>How to make a decisison?</p></li>
+<li><p>Clear that we also have ambient signal is both Visium and Xenium, how to deal with?</p></li>
 </ul>
 </section>
 <section id="references" class="slide level2 smaller scrollable">
@@ -644,6 +1007,12 @@ Done SAM24374037</code></pre>
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
 <div id="ref-fleming2023cellbender" class="csl-entry" role="listitem">
 Fleming, Stephen J., Mark D. Chaffin, Alessandro Arduini, Amer-Denis Akkad, Eric Banks, John C. Marioni, Anthony A. Philippakis, Patrick T. Ellinor, and Mehrtash Babadi. 2023. <span>“Unsupervised Removal of Systematic Background Noise from Droplet-Based Single-Cell Experiments Using CellBender.”</span> <em>Nature Methods</em> 20 (9): 1323–35. <a href="https://doi.org/10.1038/s41592-023-01943-7">https://doi.org/10.1038/s41592-023-01943-7</a>.
+</div>
+<div id="ref-gezelius2024parsecomp" class="csl-entry" role="listitem">
+Gezelius, Henrik, Anna Pia Enblad, Anders Lundmark, Martin Åberg, Kristin Blom, Jakob Rudfeldt, Amanda Raine, et al. 2024. <span>“Comparison of High-Throughput Single-Cell RNA-Seq Methods for Ex Vivo Drug Screening.”</span> <em>NAR Genomics and Bioinformatics</em> 6 (1). <a href="https://doi.org/10.1093/nargab/lqae001">https://doi.org/10.1093/nargab/lqae001</a>.
+</div>
+<div id="ref-heumos2023best-practices" class="csl-entry" role="listitem">
+Heumos, Lukas, Anna C. Schaar, Christopher Lance, Anastasia Litinetskaya, Felix Drost, Luke Zappia, Malte D. Lücken, et al. 2023. <span>“Best Practices for Single-Cell Analysis Across Modalities.”</span> <em>Nature Reviews Genetics</em> 24 (8): 550–72. <a href="https://doi.org/10.1038/s41576-023-00586-w">https://doi.org/10.1038/s41576-023-00586-w</a>.
 </div>
 <div id="ref-janssen2023ambient" class="csl-entry" role="listitem">
 Janssen, Philipp, Zane Kliesmete, Beate Vieth, Xian Adiconis, Sean Simmons, Jamie Marshall, Cristin McCabe, et al. 2023. <span>“The Effect of Background Noise and Its Removal on the Analysis of Single-Cell Expression Data.”</span> <em>Genome Biology</em> 24 (1). <a href="https://doi.org/10.1186/s13059-023-02978-x">https://doi.org/10.1186/s13059-023-02978-x</a>.

@@ -1,0 +1,754 @@
+---
+title: "Ambient RNA removal"
+description: "Visualizing cellbender, soupX and decontX output"
+format: 
+    html:
+        code-fold: true
+        code-summary: "Code"
+        code-overflow: wrap
+        toc: true
+        toc-depth: 3
+        toc-expand: 1        
+lightbox: true
+engine: jupyter
+execute:
+  cache: true
+---
+
+
+Human samples from Gezelius et al.  With all the different parse subsamples.
+
+
+```{python}
+#| label: yaml-load
+import yaml
+with open('./settings_hsa_parse.yml', 'r') as f:
+    settings = yaml.load(f, Loader=yaml.SafeLoader)
+```
+
+
+
+```{python}
+#| label: libraries
+import os
+import sys
+import glob
+import numpy as np
+import pandas as pd
+import scanpy as sc
+import warnings
+#import pyreadr
+import matplotlib.pyplot as plt
+import seaborn as sns
+from IPython.display import display, Markdown
+
+
+warnings.simplefilter(action='ignore', category=Warning)
+
+# verbosity: errors (0), warnings (1), info (2), hints (3)
+sc.settings.verbosity = 0
+sc.settings.set_figure_params(dpi=80)
+```
+
+### Read in data.
+
+First, read in the annotation file for biotypes.
+
+Make broader groupings:
+
+* Mito genes - both PC and nc.
+* PC genes - includes also IG/TR genes
+* lncRNA
+* other - all other categories.
+
+```{python}
+#| label: load-annot
+
+
+indir = "/Users/asabjor/projects/sc-devop/scQC/data/" + settings['species']
+cbdir = os.path.join(indir,"output")
+pdir = os.path.join(indir,"pipeline")
+
+annot_file = os.path.join(cbdir, settings['species'] + "_annotation.csv")
+
+
+if os.path.exists(annot_file):
+    annot = pd.read_csv(annot_file, index_col=0)
+else:   
+    if settings['species'] == "human":
+        annot = sc.queries.biomart_annotations("hsapiens", ["ensembl_gene_id", "external_gene_name", "start_position", "end_position", "chromosome_name", "gene_biotype"] )
+        annot.to_csv(annot_file)
+    elif settings['species'] == "mouse":
+        annot = sc.queries.biomart_annotations("mmusculus", ["ensembl_gene_id", "external_gene_name", "start_position", "end_position", "chromosome_name", "gene_biotype"] )
+        annot.to_csv(annot_file)
+    else: 
+        print("unknown speceis " + settings['species'] )
+        sys.exit()
+
+
+# make slim biotype
+annot["gene_class"]= "other"
+
+pc_genes = ["protein_coding","IG_V_gene","IG_D_gene","IG_J_gene","IG_C_gene","IG_LV_gene", "TR_V_gene","TR_J_gene","TR_C_gene","TR_D_gene" ]
+
+annot["gene_class"][annot.gene_biotype.isin(pc_genes)] = "pc"
+annot["gene_class"][annot.gene_biotype == "lncRNA"] = "lncRNA"
+if settings['species'] == "human":
+    annot["gene_class"][annot.external_gene_name.str.startswith('MT-').fillna(False)] = "mt"
+else:
+    annot["gene_class"][annot.external_gene_name.str.startswith('mt-').fillna(False)] = "mt"
+
+
+# define list of all classes.
+gene_classes = ["mt","pc","lncRNA","other"]
+
+```
+
+Then read in all the raw and cellbender, soupX, decontX files. For soupX select 2 different resolutions (0.2, 0.8).
+
+For soupX and decontX output is not in integer counts, round the values!
+
+```{python}
+#| label: functions
+#| 
+# does not work to read in the cellbender files from GSE244142 with sc.read_10x_h5
+# gives zero genes.
+# minor modifications of the scanpy function, now works to load the data!
+
+import h5py
+import anndata as ad
+
+def _collect_datasets(dsets: dict, group: h5py.Group):
+    for k, v in group.items():
+        if isinstance(v, h5py.Dataset):
+            dsets[k] = v[()]
+        else:
+            _collect_datasets(dsets, v)
+
+def _read_v3_10x_h5(filename, *, start=None):
+    """
+    Read hdf5 file from Cell Ranger v3 or later versions.
+    """
+    with h5py.File(str(filename), "r") as f:
+        try:
+            dsets = {}
+            _collect_datasets(dsets, f["matrix"])
+
+            from scipy.sparse import csr_matrix
+
+            M, N = dsets["shape"]
+            data = dsets["data"]
+            if dsets["data"].dtype == np.dtype("int32"):
+                data = dsets["data"].view("float32")
+                data[:] = dsets["data"]
+            matrix = csr_matrix(
+                (data, dsets["indices"], dsets["indptr"]),
+                shape=(N, M),
+            )
+            obs_dict = {"obs_names": dsets["barcodes"].astype(str)}
+            var_dict = {"var_names": dsets["name"].astype(str)}
+
+            if "gene_id" not in dsets:
+                # Read metadata specific to a feature-barcode matrix
+                var_dict["gene_ids"] = dsets["id"].astype(str)
+            else:
+                # Read metadata specific to a probe-barcode matrix
+                var_dict.update(
+                    {
+                        "gene_ids": dsets["gene_id"].astype(str),
+                        "probe_ids": dsets["id"].astype(str),
+                    }
+                )
+            var_dict["feature_types"] = dsets["feature_type"].astype(str)
+            if "filtered_barcodes" in f["matrix"]:
+                obs_dict["filtered_barcodes"] = dsets["filtered_barcodes"].astype(bool)
+
+            if "features" in f["matrix"]:
+                var_dict.update(
+                    (
+                        feature_metadata_name,
+                        dsets[feature_metadata_name].astype(
+                            bool if feature_metadata_item.dtype.kind == "b" else str
+                        ),
+                    )
+                    for feature_metadata_name, feature_metadata_item in f["matrix"][
+                        "features"
+                    ].items()
+                    if isinstance(feature_metadata_item, h5py.Dataset)
+                    and feature_metadata_name
+                    not in [
+                        "name",
+                        "feature_type",
+                        "id",
+                        "gene_id",
+                        "_all_tag_keys",
+                    ]
+                )
+            else:
+                msg = "10x h5 has no features group"
+                raise ValueError(msg)
+            adata = ad.AnnData(
+                matrix,
+                obs=obs_dict,
+                var=var_dict,
+            )
+            #logg.info("", time=start)
+            return adata
+        except KeyError:
+            msg = "File is missing one or more required datasets."
+            raise Exception(msg)
+
+```
+
+
+
+```{python}
+#| label: load-data
+
+alldata = {}
+emptydrops_genes = {}
+for sample in settings['samples'].keys():
+    print(sample)
+    rawfile = settings['samples'][sample]['raw_file']
+    f = os.path.split(rawfile)
+    read_cb_flag = True # with .mtx infiles the cellbender output is different cannot be read with read_10x-h5
+    if "raw" in f[1]:
+        raw = sc.read_10x_h5(rawfile)
+        read_cb_flag = True    
+    elif f[1] == "matrix.mtx.gz":
+        raw = sc.read_10x_mtx(f[0])
+        read_cb_flag = False 
+    elif "mtx.gz" in f[1]: 
+        raw = sc.read_10x_mtx(f[0],prefix = fname+"_")
+        read_cb_flag = False 
+    fname = sample
+    raw.var_names_make_unique()
+
+    # remove zero barcodes
+    raw = raw[raw.X.sum(axis=1)>0,:]
+
+    # read in the cellbender file.
+    cb_file = os.path.join(cbdir,sample,"cellbender","cellbender_out_filtered.h5")
+    if os.path.exists(cb_file):
+        if read_cb_flag:
+            cb = sc.read_10x_h5(cb_file)
+        else:   
+            cb = _read_v3_10x_h5(cb_file)
+        cb.var_names_make_unique()
+    else:   
+        print("No cellbender file:" + cb_file)
+        continue
+
+    # for multiseq data, cellbender also includes the HTOs!
+    cb = cb[:,raw.var_names]
+
+
+    # add in biotype info
+    t = cb.var.merge(annot, left_on="gene_ids", right_on="ensembl_gene_id", how='left')
+    t.index = cb.var.index
+    # add in "unnass" for all nas in gene_class
+    t.gene_class[t.gene_class.isna()] = "other"
+    cb.var = t
+
+    # define ribo hb genes. not in biotypes
+    cb.var['ribo'] = cb.var_names.str.startswith(("Rps","Rpl"))
+    cb.var['hb'] = cb.var_names.str.contains(("^Hb[^(p|e|s)]"))
+    for bt in gene_classes:
+        cb.var[bt] = cb.var["gene_class"] == bt
+
+    qc_vars =  gene_classes + ["ribo","hb"]           
+    raw.var = cb.var
+
+    # calculate stats for barcode rank plots from the full raw matrix.
+    sc.pp.calculate_qc_metrics(raw, inplace=True, log1p=False, qc_vars=qc_vars)
+        # add the stats to the cb object
+    cb.uns["raw_obs"] = raw.obs.copy()
+    cb.uns["raw_var"] = raw.var.copy()
+
+    #filter for same cells in raw and recalculate the stats. 
+    # add in as a layer
+    raw = raw[cb.obs_names,:]
+    cb.layers["raw"]=raw.X.copy()
+    cb.layers["CB"]=cb.X.copy()
+
+    # read in the other methods. For soupX, 2 resolutions, 0.2 and 0.8
+    # OBS! DX and SX does not have integers, round the values!!
+    sx_file1 = os.path.join(cbdir,fname,"soupX","soupX_cormat_0.2.h5")
+    if os.path.exists(sx_file1):
+        tmp = sc.read_10x_h5(sx_file1)
+        cb.layers["SX02"] = np.round(tmp.X.copy()) 
+    else: 
+        print("no file " + sx_file1)
+        tmp = cb.X.copy()
+        tmp[:,:] = 0
+        cb.layers["SX02"] = tmp.copy()
+
+    sx_file2 = os.path.join(cbdir,fname,"soupX","soupX_cormat_0.8.h5")
+    if os.path.exists(sx_file2):
+        tmp = sc.read_10x_h5(sx_file2)
+        cb.layers["SX08"] = np.round(tmp.X.copy())        
+    else: 
+        print("no file " + sx_file2)    
+        tmp = cb.X.copy()
+        tmp[:,:] = 0
+        cb.layers["SX08"] = tmp.copy()        
+        
+    dx_file = os.path.join(cbdir,fname,"decontX","decontX_cormat.h5")
+    tmp = sc.read_10x_h5(dx_file)
+    cb.layers["DX"] = np.round(tmp.X.copy())        
+
+    for l in cb.layers.keys():
+        cb.X = cb.layers[l].copy()
+        qc = sc.pp.calculate_qc_metrics(cb, inplace=False, log1p=False, qc_vars=qc_vars) # first is obs, second is var.
+        if l != "raw":
+            # proportions relative to raw data.
+            qc[0]["nFilt"] = cb.obs["raw_total_counts"] - qc[0]["total_counts"]
+            qc[0]["propFilt"] = qc[0]["nFilt"] / cb.obs["raw_total_counts"]
+            qc[1]["nFilt"] = cb.var["raw_total_counts"] - qc[1]["total_counts"]
+            qc[1]["propFilt"] = qc[1]["nFilt"] / cb.var["raw_total_counts"]
+
+        qc[0].columns = l + "_" + qc[0].columns
+        cb.obs = pd.concat([cb.obs,qc[0]], axis=1, join='inner')
+        qc[1].columns = l + "_" + qc[1].columns
+        cb.var = pd.concat([cb.var,qc[1]], axis=1, join='inner')
+
+    # read emptyDrops predictions
+    ed_dir = os.path.join(pdir, sample, "emptydrops")
+    if (not os.path.exists(os.path.join(ed_dir, "cell_stats.csv"))):
+        print("no emptydrops in " + ed_dir)        
+    else:  
+        ed_cells = pd.read_csv(os.path.join(ed_dir, "cell_stats.csv"),index_col = 0)
+        ed_cells = ed_cells.loc[ed_cells['Total']>0,:]
+        cb.uns['raw_obs']["isCellED"] = cb.uns['raw_obs'].index.isin(ed_cells.index[ed_cells.FDR <= 0.05])
+
+
+
+        emptydrops_genes[fname] = pd.read_csv(os.path.join(ed_dir, "gene_stats.csv"),index_col = 0)
+
+    # read cellranger filtered file, if available.
+    if 'filt_file' in settings['samples'][sample].keys() and settings['samples'][sample]['filt_file'] != None :
+        ffile = settings['samples'][sample]['filt_file']
+        if os.path.exists(ffile):
+            tmp = sc.read_10x_h5(ffile)
+            cb.uns['raw_obs']["isCellCR"] = cb.uns['raw_obs'].index.isin(tmp.obs.index)
+        else:
+            cb.uns['raw_obs']["isCellCR"] = False
+    else:
+        cb.uns['raw_obs']["isCellCR"] = False
+
+    alldata[fname]=cb
+    print("Done " + fname)
+
+
+```
+
+### Test tabset
+
+::: {.panel-tabset}
+
+#### tab1
+Some text
+
+#### tab2 
+other
+
+#### tab3
+
+
+:::
+
+
+### Cell filtering cellbender
+
+Plot barcode rank plot colored by cellbender/cellranger filtering.
+Calculate rank plot based on cellranger total counts.
+
+
+
+
+
+```{python}
+#| label: plot-func
+
+from matplotlib_venn import venn3
+import matplotlib.patches as mpatches
+
+clegend = [mpatches.Patch(color='Purple', label='Union 3'),
+        mpatches.Patch(color='Blue', label='EmptyDrops'),
+        mpatches.Patch(color='Green', label='CellRanger'),
+        mpatches.Patch(color='Red', label='Cellbender'),
+        mpatches.Patch(color='Yellow', label='2 methods'),
+        mpatches.Patch(color='Grey', label='None')
+        ]
+
+def plot_general_stats(tmp,name):
+    display(Markdown(f"## {name}"))
+
+    tmp.uns["raw_obs"]["inCB"] = tmp.uns["raw_obs"].index.isin(tmp.obs_names)
+    tmp.uns["raw_obs"]["rankRaw"] = tmp.uns["raw_obs"]['total_counts'].rank(method='first', ascending = False)
+
+
+    fig, axs = plt.subplots(2, 2, figsize=(10,8),constrained_layout=True)
+    s1 = set(tmp.uns['raw_obs'].index[tmp.uns['raw_obs']['inCB']])
+    s2 = set(tmp.uns['raw_obs'].index[tmp.uns['raw_obs']['isCellCR']])
+    s3 = set(tmp.uns['raw_obs'].index[tmp.uns['raw_obs']['isCellED']])
+    venn3((s1,s2,s3), set_labels = ('CB', 'CR', 'ED'), ax=axs[1,0])
+    axs[1,0].title.set_text("Cells selection")
+
+    cc = tmp.uns['raw_obs'].loc[:,["isCellED","isCellCR","inCB"]]
+    tmp.uns['raw_obs']['color'] = "Grey"
+    tmp.uns['raw_obs']['color'][tmp.uns['raw_obs']['inCB']] = "Red" 
+    tmp.uns['raw_obs']['color'][tmp.uns['raw_obs']['isCellCR']] = "Green" 
+    tmp.uns['raw_obs']['color'][tmp.uns['raw_obs']['isCellED']] = "Blue" 
+    tmp.uns['raw_obs']['color'][cc.sum(axis=1) == 3] = "Purple"
+    tmp.uns['raw_obs']['color'][cc.sum(axis=1) == 2] = "Yellow"
+
+    axs[0,0].scatter(tmp.uns["raw_obs"]['rankRaw'], tmp.uns["raw_obs"]['total_counts'], c=tmp.uns["raw_obs"]["color"])
+    axs[0,0].set_xscale("log")
+    axs[0,0].set_yscale("log")
+    axs[0,0].set_xlabel("rankRaw")
+    axs[0,0].set_ylabel("nUMI")
+    axs[0,0].title.set_text("Barcode rank plot")
+    axs[0,0].legend(handles=clegend,
+          loc='lower left')
+
+    # counts before after filt
+    axs[0,1].scatter(tmp.obs['raw_total_counts'], tmp.obs['CB_total_counts'], alpha=0.5)
+    axs[0,1].axline((0, 0), slope=1, color="black")
+    axs[0,1].set_xlabel("Raw counts")
+    axs[0,1].set_ylabel("CB counts")
+    axs[0,1].set_xscale("log")
+    axs[0,1].set_yscale("log")
+    axs[0,1].title.set_text("Counts per cell before/after CB")
+
+    axs[1,1].scatter(tmp.var["raw_total_counts"], tmp.var['CB_total_counts'], alpha=0.5)
+    axs[1,1].axline((0, 0), slope=1, color="black")
+    axs[1,1].set_xlabel("Raw gene counts")
+    axs[1,1].set_ylabel("CB gene counts")
+    axs[1,1].set_xscale("log")
+    axs[1,1].set_yscale("log")
+    axs[1,1].title.set_text("Counts per gene before/after CB")
+
+
+    fig.suptitle(name)
+    display(plt.gcf())
+    plt.close()
+    display(Markdown(f" "))
+
+```
+
+
+
+
+```{python}
+#| label: barcode-plot
+#| output: asis
+for sname in alldata.keys():
+    plot_general_stats(alldata[sname], sname)
+```
+
+
+Weird histograms for some samples, especially the SAM samples.  
+
+
+### Filtering stats all methods
+
+Proportion filtered per cell
+
+```{python}
+#| label: filt-stat
+#| collapse: true
+
+all_methods = ["CB","SX02","SX08","DX"]
+pf = [x + "_propFilt" for x in all_methods]
+
+nPlot = 9
+for r in range(0,len(alldata),nPlot): 
+    s = list(alldata.keys())[r:(r+nPlot)]
+    fig, axs = plt.subplots(3, 3, figsize=(10,8),constrained_layout=True)
+    for sname, ax in zip(s, axs.flatten()):
+        sc.pl.violin(alldata[sname], pf, rotation=90, ax=ax, show=False)
+        ax.tick_params(axis='x', labelsize=8)
+        ax.title.set_text(sname)
+
+```
+
+
+### Gene stats
+
+
+Plot fraction filtered per gene vs total counts before filtering. Color genes by:
+
+* green = mt
+* red = pc
+* blue = lincRNA
+* purple = other (all other classes, plus ones not in latest biomart ensembl version)
+
+```{python}
+#| label: plot-func2
+
+colors=sns.color_palette('Set1')
+gene_colors={'pc': colors[0], 'lncRNA': colors[1], 'mt':colors[2], 'other':colors[3]} 
+hexcols = colors.as_hex()
+gene_colors_hex = {'pc': hexcols[0], 'lncRNA': hexcols[1], 'mt':hexcols[2], 'other':hexcols[3]} 
+
+def plot_gene_proportions(df,sname=" ", nPlot=10):
+    df = df.loc[df.raw_total_counts > 0,:]
+    df['Clog'] = np.log1p(df['raw_total_counts'])
+
+    fig, axs = plt.subplots(1, 5, figsize=(10,4),constrained_layout=True)
+    for i,n in enumerate(all_methods):
+        if not df.columns.isin( [n+'_propFilt']).any(): continue
+        df[n+"_rank"]= df[n+'_propFilt'] * df['Clog']
+        df = df.sort_values(by=n+"_rank", axis=0, ascending=False)
+        sel = df.head(nPlot)
+        sns.scatterplot(df, x='Clog',y=n+'_propFilt',hue='gene_class', palette=gene_colors,  legend=False, ax=axs[i])
+        axs[i].title.set_text(n)
+        axs[i].set_xlabel('')
+        axs[i].set_ylabel('')
+        # annotate points in axis
+        for idx, row in sel.iterrows():
+            axs[i].annotate(idx, ( row['Clog'],row[n+'_propFilt']), rotation = 45, fontsize=6)
+        fig.suptitle(sname)
+
+    gstats = emptydrops_genes[sname]
+    gstats = gstats.loc[gstats.index.isin(df.index),:]
+    topA = gstats['ambient'].sort_values(ascending=False).head(nPlot).index
+    gstats = gstats.loc[topA,:]
+    gstats['gene_class'] = df['gene_class'][gstats.index]
+    gstats['gene'] = gstats.index    
+
+    sns.barplot(gstats, x='gene',y='ambient',hue='gene_class', palette=gene_colors, ax=axs[4])
+    axs[4].title.set_text("EmptyDrops score")
+    axs[4].set_xlabel('')
+    axs[4].set_ylabel('')
+    axs[4].legend(fontsize=8)
+    rotate_xticks(axs[4], size=6)    
+
+def rotate_xticks(ax, size=8, rotation=45):
+    ax.set_xticklabels(ax.get_xticklabels(), rotation = rotation, size=size, ha='right')
+```
+
+
+
+```{python}
+#| collapse: true
+#| label: plot-genes
+
+for sname in alldata.keys():
+    plot_gene_proportions(alldata[sname].var, sname)
+
+```
+
+
+
+### Mito, etc. 
+
+Violin plots after filtering and raw. 
+
+
+```{python}
+#| label: plot-vln
+#| collapse: true
+
+qc_plot = ["mt","hb","pc"]
+plot_feats = [m + "_pct_counts_" + q for q in qc_plot for m in ["raw"] + all_methods ]
+
+
+nPlot = 9
+for r in range(0,len(alldata),nPlot): 
+    s = list(alldata.keys())[r:(r+nPlot)]
+    fig, axs = plt.subplots(3, 3, figsize=(10,8),constrained_layout=True)
+    for sname, ax in zip(s, axs.flatten()):
+        sc.pl.violin(alldata[sname], plot_feats, rotation=90, ax=ax, show=False)
+        ax.tick_params(axis='x', labelsize=8)
+        ax.title.set_text(sname)
+        
+```
+
+Generally more high mito cells after CB filtering. 
+
+
+### Biotype proportions
+
+Calculate total proportions of all biotypes per layer.
+
+"Total" is the proportions in the full raw matrix also containing empty droplets, while raw is the same stats taking the subset of cells selected by cellbender.
+
+```{python}
+#| label: plot-func3
+
+def plot_biotypes(df,title,ax):
+    tmp = df.loc[:,df.columns.str.contains("total_counts|gene_class")]
+    tmp = tmp.groupby("gene_class").sum()
+    tmp.columns = tmp.columns.str.replace("_counts","")
+    tmp.columns = tmp.columns.str.replace("_total","")
+    tmp_perc = tmp.iloc[:, :].apply(lambda x: x / x.sum(), axis=0) * 100
+    tmp_perc.transpose().plot(kind="bar",stacked=True, color=gene_colors, legend=False, title=title, ax=ax )
+    lim = np.round(100-tmp_perc.loc["pc",:].min()+5)
+    ax.set_ylim([0,lim])
+```
+
+
+```{python}
+#| label: plot-biotype
+#| collapse: true
+
+qc_plot = ["total_counts","n_genes_by_counts"]
+plot_feats = [m + "_" + q for q in qc_plot for m in ["raw"] + all_methods ]
+
+
+nPlot = 9
+for r in range(0,len(alldata),nPlot): 
+    s = list(alldata.keys())[r:(r+nPlot)]
+    fig, axs = plt.subplots(3, 3, figsize=(10,8),constrained_layout=True)
+    for sname, ax in zip(s, axs.flatten()):
+        plot_biotypes(alldata[sname].var,sname,ax)
+
+
+```
+
+
+
+## Check top genes
+
+
+```{python}
+#| label: topgenes
+#| output: asis
+
+for sname in alldata.keys():
+    display(Markdown(f"## {sname}"))
+    sc.pl.highest_expr_genes(alldata[sname])
+    display(Markdown(f" "))
+```
+
+
+## Parse data
+
+
+Closer comparison of the bg predictions with all vs each sample.
+
+
+### Cell filtering
+
+Compare the predictions from cellbender using all vs each sample separately. Clearly have different barcode rank plots. 
+
+
+
+
+
+```{python}
+#| label: parse-filtering
+ed = alldata['parse1_all'].uns['raw_obs']['isCellED']
+ed_stats = {}
+cb = alldata['parse1_all'].uns['raw_obs']['inCB']
+cb_stats = {}
+
+for sample in alldata.keys():
+    if "parse1" in sample and sample != 'parse1_all':
+        tmp = alldata[sample].uns['raw_obs']['isCellED']
+        tmp2 = pd.concat([ed,tmp], axis=1, join='inner')
+        tmp2.columns = ['all','s']
+        tmp2 = tmp2.value_counts().reset_index()
+        tmp2.index = tmp2['all'].astype('str') + tmp2['s'].astype('str')
+        ed_stats[sample] = tmp2[0]
+        tmp = alldata[sample].uns['raw_obs']['inCB']
+        tmp2 = pd.concat([cb,tmp], axis=1, join='inner')
+        tmp2.columns = ['all','s']
+        tmp2 = tmp2.value_counts().reset_index()
+        tmp2.index = tmp2['all'].astype('str') + tmp2['s'].astype('str')
+        cb_stats[sample] = tmp2[0]
+
+
+fig, axs = plt.subplots(1, 2, figsize=(10,8),constrained_layout=True)
+
+ed_stats = pd.DataFrame(ed_stats)
+ed_stats = ed_stats.iloc[1:,:]
+ed_stats.index = ['Sample only', 'All only',"Both"]
+ed_stats.T.plot(kind="bar",stacked=True, title='parse1 samples EmptyDrops', ax = axs[0])
+
+cb_stats = pd.DataFrame(cb_stats)
+cb_stats = cb_stats.iloc[1:,:]
+cb_stats.index = ['Sample only', 'All only',"Both"]
+cb_stats.T.plot(kind="bar",stacked=True, title='parse1 samples CellBender', ax = axs[1])
+
+
+
+```
+
+```{python}
+#| label: parse-filtering2
+ed = alldata['parse2_all'].uns['raw_obs']['isCellED']
+ed_stats = {}
+cb = alldata['parse2_all'].uns['raw_obs']['inCB']
+cb_stats = {}
+
+for sample in alldata.keys():
+    if "parse2" in sample and sample != 'parse2_all':
+        tmp = alldata[sample].uns['raw_obs']['isCellED']
+        tmp2 = pd.concat([ed,tmp], axis=1, join='inner')
+        tmp2.columns = ['all','s']
+        tmp2 = tmp2.value_counts().reset_index()
+        tmp2.index = tmp2['all'].astype('str') + tmp2['s'].astype('str')
+        ed_stats[sample] = tmp2[0]
+        tmp = alldata[sample].uns['raw_obs']['inCB']
+        tmp2 = pd.concat([cb,tmp], axis=1, join='inner')
+        tmp2.columns = ['all','s']
+        tmp2 = tmp2.value_counts().reset_index()
+        tmp2.index = tmp2['all'].astype('str') + tmp2['s'].astype('str')
+        cb_stats[sample] = tmp2[0]
+
+
+fig, axs = plt.subplots(1, 2, figsize=(10,8),constrained_layout=True)
+
+ed_stats = pd.DataFrame(ed_stats)
+ed_stats = ed_stats.iloc[1:,:]
+ed_stats.index = ['Sample only', 'All only',"Both"]
+ed_stats.T.plot(kind="bar",stacked=True, title='parse2 samples EmptyDrops', ax = axs[0])
+
+cb_stats = pd.DataFrame(cb_stats)
+cb_stats = cb_stats.iloc[1:,:]
+cb_stats.index = ['Sample only', 'All only',"Both"]
+cb_stats.T.plot(kind="bar",stacked=True, title='parse2 samples CellBender', ax = axs[1])
+
+
+
+
+```
+
+### Ambient profile
+
+```{python}
+#| label: ambient-overlap
+# remove hto genes from multiseq.
+
+ed = pd.DataFrame([emptydrops_genes[sample].ambient for sample in emptydrops_genes.keys()]  )
+ed.index = emptydrops_genes.keys()
+
+# Top genes per row
+#topA = gstats['ambient'].sort_values(ascending=False).head(10).index
+ed.apply(lambda x: x.nlargest(10).index.tolist(), axis=1)
+```
+
+Top 10 genes per sample in heatmap colored by emptyDrops score.
+
+```{python}
+#| fig.width: 14
+#| fig.height: 8
+#| label: ambient-overlap2
+
+tmp = ed.apply(lambda x: x.nlargest(10).index.tolist(), axis=1).tolist()
+l = list(set(sum(tmp, [])))
+
+df = ed.loc[:,l]
+
+plt.pcolor(df)
+plt.yticks(np.arange(0.5, len(df.index), 1), df.index, size=8)
+plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns, rotation = 45, size = 6, ha='right')
+plt.show()
+```
+
+
+
+

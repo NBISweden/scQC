@@ -21,7 +21,7 @@ jupyter: python3
 ```{python}
 #| label: yaml-load
 import yaml
-with open('./settings.yml', 'r') as f:
+with open('./settings_hsa.yml', 'r') as f:
     settings = yaml.load(f, Loader=yaml.SafeLoader)
 ```
 

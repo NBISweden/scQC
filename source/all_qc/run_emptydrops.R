@@ -22,6 +22,8 @@ dir.create(outpath, showWarnings = F)
 cat("Reading from ",path,"\n")
 
 
+if (grepl("\\.h5$", path)){
+
 data = h5read(path,"matrix/data")
 indices = h5read(path,"matrix/indices")
 indptr = h5read(path,"matrix/indptr")
@@ -40,7 +42,6 @@ barcodes =as.character(h5read(path,  "matrix/barcodes"))
 colnames(C) = barcodes
 rownames(C) = gene.names
 
-
 print(dim(C))
 # remove droplets with 1 or 0 counts
 nC = colSums(C)
@@ -49,8 +50,23 @@ C = C[,nC>1]
 # rempve genes with no expression
 nCG = rowSums(C)
 C = C[nCG>0,]
-
 sce <- SingleCellExperiment(assays = list(counts = C))
+
+}else if (grepl("matrix.mtx.gz", path)){
+  sce = DropletUtils::read10xCounts(dirname(path),  row.names = 'symbol', col.names = T)
+  nC = colSums(counts(sce))
+  sce = sce[,nC>1]
+  nCG = rowSums(counts(sce))
+  sce = sce[nCG>0,]
+
+
+}else{
+  cat("Error! unknown input file format ", path, "\n")	
+  stop()
+} 
+
+
+
 
 cat("Running emptyDrops\n")
 ambient = emptyDrops(sce)

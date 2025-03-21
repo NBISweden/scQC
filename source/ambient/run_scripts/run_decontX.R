@@ -26,8 +26,14 @@ sfiles = dir(indir,"raw")
 # dataset with mtx format!
 #indir="/Users/asabjor/projects/sc-devop/scQC/data/mouse/GSE244142/"  
 #split.idx = 1:2
-
 #sfiles = dir(indir,"mtx")
+
+# The human data all have mtx format
+indir="/Users/asabjor/projects/sc-devop/scQC/data/human/GSE229617"
+resdir="/Users/asabjor/projects/sc-devop/scQC/data/human/output"
+split.idx = 1:2
+sfiles = list.dirs(indir, full.names=F)[-1]
+
 
 #########################################
 
@@ -55,8 +61,14 @@ read_mtx = function(mtxfile, path){
 #########################################
 # run one sample at a time
 
-for (sfile in sfiles){ 
-  sname = paste(unlist(strsplit(sfile,"_"))[split.idx], collapse = "_")
+for (sfile in sfiles){
+  if (grepl("parse[12]$",sfile) ) { next }
+  if (grepl("parse",sfile)){
+     sname = sub("/","_",sfile)
+  }else{
+     sname = paste(unlist(strsplit(sfile,"_"))[split.idx], collapse = "_")
+     sname = gsub("_NA","",sname)
+  }
   raw_file = file.path(indir,sfile)
   cb_file =  file.path(resdir,sname,"cellbender","cellbender_out_cell_barcodes.csv")
   
@@ -73,9 +85,14 @@ for (sfile in sfiles){
   
   if (grepl(".h5", sfile)){
     counts.raw = Read10X_h5(raw_file)
+  }else if (dir.exists(raw_file)){ # if it is a directory instead.
+    counts.raw = Read10X(raw_file)
   }else{
     counts.raw = read_mtx(sfile,indir)
   }
+  # for multiseq returns a list of matrices
+  if (class(counts.raw) == 'list'){ counts.raw = counts.raw[["Gene Expression"]] } 
+
   cb_barcodes = read.csv(cb_file, header = F)
   counts.filt = counts.raw[,cb_barcodes[,1]]
   
