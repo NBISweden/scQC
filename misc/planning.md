@@ -25,6 +25,40 @@
 - Interactive viewer after QC for selecting QC filters.
 - Percent spliced/unspliced, if running velocity pipeline
 
+## scdownstream vs wishlist
+
+[scdownstream](https://nf-co.re/scdownstream/dev/) nf-core pipeline has most of the features we need:
+
+- scd has most of the features that we need:
+	- empty droplet removal.
+	- ambient RNA removal
+	- cell filtering - but very limited.
+	- downstreamd integration, umap, clustering.
+- Missing is:
+	- For empty droplet calling - include emptydrops
+	- Dynamical filtering of cells - see example in qc_summary.html
+	- Gene biotype information: If gtf available use that for biotypes, otherwise use biomart?
+		- as violins
+		- as proportion barplots.
+	- Gene filtering - at least mito removal, but possibly pc genes selection? Hard to specify specific ncRNA in a pipeline.
+	- Celltype prediction - include a broad predictor like singleR HPCA, already started in branch https://github.com/nf-core/scdownstream/tree/24-implement-singler-cell-type-assignment
+	- Sample sex plots? Possibly also crosscheck with metadata if available. Implement for mouse and human to start with, possibly extend to more species. Simplyfy with list of non-PAR chrY genes.
+	- More extensive report is needed, now multiqc report. 
+	- Option to have umap/clustering without integration, probably already possible.
+- Many QC tools in scd are not yet shared modules, we can probably get help from Nico in creating shared modules.
+- Reports options:
+	- Multiqc based, for now has static images exported at different steps.
+	- .qmd based, similar to what is used in spatialvi pipeline. 
+	- .Rmd based, examples in the scflow pipeline https://github.com/combiz/scFlow/blob/master/inst/rmarkdown/templates/merged-quality-control/skeleton/skeleton.Rmd
+	- Examples of reports in this [drive folder](https://drive.google.com/drive/folders/1mAfAw0IBc4j_w_aX7jZEz0dVFbqYEg4V?usp=sharing) 
+		- multiqc report is from scdownstream tested with 3 samples.
+		- qc_overview.html is summary from Åsa.
+		- example reports from scflow. 
+	- Can be one large report or multiple shorter reports. 
+
+
+
+
 ## Existing tools
 
 - scQCEA - https://isarnassiri.github.io/scQCEA/, july 2023
