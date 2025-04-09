@@ -1,10 +1,25 @@
 ## Meeting 250409 10:00
 
-* Summary of scdownstream meeting (Erik/Åsa)
-* List of parts that are missing in scdownstream in [planning doc](planning.md). 
+* Brief background on what has been discussed before
+* Summary of scdownstream developer Nico Trummer meeting (Erik/Åsa)
+* List of parts that are missing in scdownstream in [planning doc](planning.md) under section "scdownstream vs wishlist".
+* Main subtasks could be:
+  * emptydrops module
+  * singleR celltype module - continuation on what has been implemented already.
+  * gene biotype information from gtf or via baiomart.
+  * qc filtering script with dynamical or fixed filtering options
+  * report - probably easiest to continue with .qmd report
+* We will set up a poll to divide tasks into subgroups after the nf-core session.
 * Probably a good idea to have a intro of nextflow/nf-core for everyone. Have material at [reproducibility course](https://nbisweden.github.io/workshop-reproducible-research/pages/nextflow.html).
-* Discussion on how to move forward, setting dates etc.
-
+  * Plan is that everyone looks through the material from the course on their own.
+  * Erik F will organize a session for explaining nf-core vs nextflow with some examples from the scdownstream pipeline. Will Ask Mahesh if he also can join.
+  * Poll for suitable dates on the slack channel #scqc_pipeline.
+* For the actual hackathon we decided to have it on-site in Stockholm on 21st of May (day before cellmol meeting in Sth).
+* Additional people that migth be interested are:
+  * Nico and other scdownstream devs?
+  * NGI bioinfo staff.
+  * Other NBIS staff?
+  * Åsa will send out information and ask if anyone is interested.
 
 
 ## Planning meeting 250321 13:00

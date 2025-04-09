@@ -42,6 +42,8 @@
 		- as proportion barplots.
 	- Gene filtering - at least mito removal, but possibly pc genes selection? Hard to specify specific ncRNA in a pipeline.
 	- Celltype prediction - include a broad predictor like singleR HPCA, already started in branch https://github.com/nf-core/scdownstream/tree/24-implement-singler-cell-type-assignment
+	  	- also, the turkish group doing a hackathon also suggested celltyping. https://github.com/KurayiChawatama/nf-core-March-2025-Hackathon-scdownstream-Pipeline-Improvement-Project
+		- scimilarity was just implemented into the pipeline. Needs gpu? 
 	- Sample sex plots? Possibly also crosscheck with metadata if available. Implement for mouse and human to start with, possibly extend to more species. Simplyfy with list of non-PAR chrY genes.
 	- More extensive report is needed, now multiqc report. 
 	- Option to have umap/clustering without integration, probably already possible.
