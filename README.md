@@ -6,6 +6,8 @@ Dates:
 * *21st of May*, 10-17, in Stockholm or on-line, Hackathon. More information on the exact details will come later.
 
 
+General info:
+
 * Thougths on what should be in the pipeline [here](misc/planning.md)
 * Suggested [datasets](misc/data.md)
 * Meeting notes [here](misc/meetings.md)
