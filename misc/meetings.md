@@ -13,8 +13,8 @@
 * Probably a good idea to have a intro of nextflow/nf-core for everyone. Have material at [reproducibility course](https://nbisweden.github.io/workshop-reproducible-research/pages/nextflow.html).
   * Plan is that everyone looks through the material from the course on their own.
   * Erik F will organize a session for explaining nf-core vs nextflow with some examples from the scdownstream pipeline. Will Ask Mahesh if he also can join.
-  * Poll for suitable dates on the slack channel #scqc_pipeline.
-* For the actual hackathon we decided to have it on-site in Stockholm on 21st of May (day before cellmol meeting in Sth).
+  * Poll for suitable dates on the slack channel #scqc_pipeline. Finally the time 5th of May at 13:00 was decided. 
+* For the actual hackathon we decided to have it on-site in Stockholm on 21st of xMay (day before cellmol meeting in Sth).
 * Additional people that migth be interested are:
   * Nico and other scdownstream devs?
   * NGI bioinfo staff.
