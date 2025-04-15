@@ -1,12 +1,16 @@
 #!/bin/bash
-#SBATCH -A naiss2024-22-1461
+#SBATCH -A uppmax2025-2-292
 #SBATCH -p core
 #SBATCH -n 1
-#SBATCH -t 24:00:00
+#SBATCH -t 48:00:00
 #SBATCH -J nf-core
 #SBATCH -e /proj/naiss2024-23-571/nobackup/scQC/scdownstream/reports/nf.SLURM_Job_id=%j.sderr
 #SBATCH -o /proj/naiss2024-23-571/nobackup/scQC/scdownstream/reports/nf.SLURM_Job_id=%j.sdout
 
+
+# compute projects:
+# uppmax2025-2-292 - NBIS project.
+# naiss2024-22-1461 - Roy project 
 
 module load bioinfo-tools
 module load Nextflow
@@ -37,11 +41,12 @@ mkdir -p SINGULARITY_CACHEDIR SINGULARITY_TMPDIR MATPLOTLIB_CACHEDIR
 # naiss2024-22-1461 = roy sc project
 
 
-nextflow run nf-core/scdownstream -r dev -params-file params.yaml  -profile uppmax --project naiss2024-22-1461 -resume
+#nextflow run nf-core/scdownstream -r dev -params-file params.yaml  -profile uppmax --project naiss2024-22-1461 -resume
 
+#nextflow run nf-core/scdownstream -r dev -params-file params.yaml -c custom_base.config -profile uppmax --project naiss2024-22-1461 -resume --clusterOptions "-C mem256GB -p node" --max_memory "256GB"
 
-
-#nextflow run assets/nf-core/scdownstream/main.nf -r dev -params-file params.yaml  -profile uppmax --project naiss2024-22-1461 -resume --clusterOptions "-C mem256GB -p node" --max_memory "256GB"
+nextflow run nf-core/scdownstream -r dev -params-file params.yaml -c custom_base.config -profile uppmax --project uppmax2025-2-292 -resume --clusterOptions "-C mem2\
+56GB -p node" --max_memory "256GB"
 
 
 # increased memory with:

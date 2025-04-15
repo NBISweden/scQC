@@ -1,3 +1,4 @@
 sample,unfiltered,min_genes,max_mito_percentage
 GSM6757771_rep1,/proj/naiss2024-23-571/nobackup/scQC/data/mouse/GSE218853/GSM6757771_rep1_raw_feature_bc_matrix.h5,200,80
 GSM6757772_rep2,/proj/naiss2024-23-571/nobackup/scQC/data/mouse/GSE218853/GSM6757772_rep2_raw_feature_bc_matrix.h5,200,70
+GSM6757774_nuc2,/proj/naiss2024-23-571/nobackup/scQC/data/mouse/GSE218853/GSM6757774_nuc2_raw_feature_bc_matrix.h5,200,40
