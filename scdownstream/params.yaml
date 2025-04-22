@@ -3,8 +3,9 @@ outdir: ./results
 email: asa.bjorklund@scililfelab.se
 preprocess_only: false
 ambient_removal: cellbender
-doublet_detection: scrublet,scds,solo
+doublet_detection: scrublet,scds,solo, doubletdetection
 doublet_detection_threshold: 2
-integration_methods: bbknn,harmony
+integration_methods: bbknn,harmony,scimilarity
 integration_hvgs: 4000
 skip_liana: true 
+celltypist_model: Developing_Human_Organs
