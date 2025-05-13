@@ -1,3 +1,8 @@
+## Notes 250513
+
+* Testing of sctk tool for automatic qc can be found in [sctk_test.qmd](../source/misc/sctk_test.qmd).
+* Summary of features in a google slides [document](https://docs.google.com/presentation/d/1_lY3vLtWLCIvAngNJcEEfxFLF2KNczN_z8jrwkdGbqo/edit?usp=sharing)
+
 ## Meeting 250409 10:00
 
 * Brief background on what has been discussed before
