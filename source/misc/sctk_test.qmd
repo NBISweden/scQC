@@ -1,0 +1,382 @@
+---
+title: "sctk"
+description: "Test script for sctk"
+format:
+    html:
+        code-fold: true
+        code-summary: "Code"
+        code-overflow: wrap
+        toc: true
+        toc-depth: 3
+        toc-expand: 1
+lightbox: true
+engine: jupyter
+jupyter: python3
+---
+
+## Run their tutorial 
+
+https://teichlab.github.io/sctk/notebooks/automatic_qc.html
+
+```{python}
+import scanpy as sc
+import sctk
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from IPython.display import display, Markdown
+
+sc.settings.set_figure_params(dpi=80)
+```
+
+```{python}
+adata = sc.datasets.pbmc3k()
+adata
+
+```
+
+```{python}
+sctk.calculate_qc(adata)
+adata
+```
+
+```{python}
+sctk.cellwise_qc(adata, plot=True)
+adata
+```
+
+```{python}
+adata.obs['cell_passed_qc'].sum()
+```
+
+```{python}
+adata.uns['scautoqc_ranges']
+```
+
+
+Under the hood, sctk.cellwise_qc() models each of the specified QC metrics as a Gaussian mixture model, with the model proposing possible low and high value cutoffs at points where the probability density function of the mixture falls below a threshold (0.05 by default). The function is written to allow robust filtering, requiring a specific formatting of metrics. The default values are stored in sctk.default_metric_params_df:
+
+
+Plot violins with the cutoffs:
+
+* median in solid black, 
+* median +/- 3MAD in dotted black.  
+* logscale median +/- 3MAD in dotted blue.  
+*  Their cutoffs in red, 
+
+
+
+```{python}
+filt = adata.uns['scautoqc_ranges'].copy()
+filt['3mad low'] = 0
+filt['3mad high'] = 0
+filt['log3mad low'] = 0
+filt['log3mad high'] = 0
+
+
+qc_stats = filt.index.tolist()
+
+fig, axs = plt.subplots(2, 3, figsize=(10,6),constrained_layout=True)
+for stat, ax in zip(qc_stats, axs.flatten()):
+    me = adata.obs[stat].median()
+    mad = adata.obs[stat].mad()
+    filt.loc[stat,'3mad low'] = me-3*mad
+    filt.loc[stat,'3mad high'] = me+3*mad
+
+    sc.pl.violin(adata,stat,  ax=ax, show=False)
+
+    # median and 3 mad
+    ax.hlines(me,-0.5,0.5, linewidth=2, color = 'black')
+    ax.hlines(filt.loc[stat,'3mad low'],-0.5,0.5, linewidth=2, color = 'black', linestyles = 'dotted')
+    ax.hlines(filt.loc[stat,'3mad high'],-0.5,0.5, linewidth=2, color = 'black',  linestyles = 'dotted')
+
+    # their predictions
+    ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'low'],-0.5,0.5, linewidth=2, color = 'red', linestyles = 'dotted')
+    ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'high'],-0.5,0.5, linewidth=2, color = 'red',  linestyles = 'dotted')
+
+    # logscale mad.
+    logstat = np.log1p(adata.obs[stat])
+    me = logstat.median()
+    mad = logstat.mad()
+    filt.loc[stat,'log3mad low'] = np.expm1(me-3*mad)
+    filt.loc[stat,'log3mad high'] = np.expm1(me+3*mad)
+
+    ax.hlines(filt.loc[stat,'log3mad low'],-0.5,0.5, linewidth=2, color = 'blue', linestyles = 'dotted')
+    ax.hlines(filt.loc[stat,'log3mad high'],-0.5,0.5, linewidth=2, color = 'blue',  linestyles = 'dotted')
+
+filt    
+```
+
+
+Same but with logscale for all!
+
+```{python}
+
+
+fig, axs = plt.subplots(2, 3, figsize=(10,6),constrained_layout=True)
+for stat, ax in zip(qc_stats, axs.flatten()):
+    sc.pl.violin(adata,stat,  ax=ax, show=False, log=True)
+    me = adata.obs[stat].median()   
+
+    ax.hlines(np.expm1(me),-0.5,0.5, linewidth=2, color = 'black')
+    ax.hlines(filt.loc[stat,'3mad low'],-0.5,0.5, linewidth=2, color = 'black', linestyles = 'dotted')
+    ax.hlines(filt.loc[stat,'3mad high'],-0.5,0.5, linewidth=2, color = 'black',  linestyles = 'dotted')
+
+    ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'low'],-0.5,0.5, linewidth=2, color = 'red', linestyles = 'dotted')
+    ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'high'],-0.5,0.5, linewidth=2, color = 'red',  linestyles = 'dotted')
+
+    ax.hlines(filt.loc[stat,'log3mad low'],-0.5,0.5, linewidth=2, color = 'blue', linestyles = 'dotted')
+    ax.hlines(filt.loc[stat,'log3mad high'],-0.5,0.5, linewidth=2, color = 'blue',  linestyles = 'dotted')
+
+
+
+
+```
+
+
+```{python}
+sctk.default_metric_params_df
+```
+
+### Change one cutoff.
+
+Min/max cutoffs will set the minimum/maximum value to use in modelling the distribution.
+
+```{python}
+metrics = sctk.default_metric_params_df.loc[["n_counts",
+    "n_genes",
+    "percent_mito",
+    "percent_ribo",
+    "percent_hb"], :]
+
+metrics.loc["n_genes", "min"] = 500
+metrics
+```
+
+```{python}
+sctk.cellwise_qc(adata, metrics=metrics, plot=True)
+
+
+# before was:
+# n_genes: [320.5358429786537, 3421.998779296875], 2678/2700 passed
+# now is: 
+# n_genes: [495.3027116195289, 3421.998779296875], 2486/2700 passed
+# why 495 and not 500??
+```
+
+Why is the cutoff not set to 500 for n_genes and 1000 for n_counts? 
+
+Filters out all cells below the cutoffs from the data before running the modelling, then defines the cutoffs from the model.
+
+From tutorial:
+
+Under the hood, sctk.cellwise_qc() models each of the specified QC metrics as a Gaussian mixture model, with the model proposing possible low and high value cutoffs at points where the probability density function of the mixture falls below a threshold (0.05 by default). The function is written to allow robust filtering, requiring a specific formatting of metrics. The default values are stored in sctk.default_metric_params_df:
+
+### Add in custom cutoffs
+
+For now had genes, counts, mito, ribo, hb.
+
+Add in also `percent_top50` that is already calculated.
+
+```{python}
+sc.pl.violin(adata,"percent_top50")
+```
+
+
+Can also add in additional flags with:
+
+```
+def calculate_qc(
+    adata,
+    flags={"mito": r"^MT-", "ribo": r"^RP[LS]", "hb": r"^HB"},
+    extra_flags={},
+```
+
+
+```{python}
+
+metrics.loc['percent_top50',:] = [0.0,100.0, 'log', 'both', 0.1]
+sctk.cellwise_qc(adata, metrics=metrics)
+
+```
+
+Now also filters for percent_top50
+
+NOTE! 
+
+Need to add in additional QC measures to the `calculate_qc` step. It should also take a list of genes instead of a pattern. 
+
+## Own dataset
+
+Use the same data as for the qc_overview.qmd script.
+
+```{python}
+import yaml
+with open('../all_qc/settings.yml', 'r') as f:
+    settings = yaml.load(f, Loader=yaml.SafeLoader)
+
+samples = list(settings['samples'].keys())    
+```
+
+For one dataset at a time, run qc and plotting.
+
+```{python}
+def plot_qc_violins(adata):
+    filt = adata.uns['scautoqc_ranges'].copy()
+    filt['3mad low'] = 0
+    filt['3mad high'] = 0
+    filt['log3mad low'] = 0
+    filt['log3mad high'] = 0
+
+
+    qc_stats = filt.index.tolist()
+
+    fig, axs = plt.subplots(2, 3, figsize=(10,6),constrained_layout=True)
+    for stat, ax in zip(qc_stats, axs.flatten()):
+        me = adata.obs[stat].median()
+        mad = adata.obs[stat].mad()
+        filt.loc[stat,'3mad low'] = me-3*mad
+        filt.loc[stat,'3mad high'] = me+3*mad
+
+        sc.pl.violin(adata,stat,  ax=ax, show=False)
+
+        # median and 3 mad
+        ax.hlines(me,-0.5,0.5, linewidth=2, color = 'black')
+        ax.hlines(filt.loc[stat,'3mad low'],-0.5,0.5, linewidth=2, color = 'black', linestyles = 'dotted')
+        ax.hlines(filt.loc[stat,'3mad high'],-0.5,0.5, linewidth=2, color = 'black',  linestyles = 'dotted')
+        # their predictions
+        ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'low'],-0.5,0.5, linewidth=2, color = 'red', linestyles = 'dotted')
+        ax.hlines(adata.uns['scautoqc_ranges'].loc[stat,'high'],-0.5,0.5, linewidth=2, color = 'red',  linestyles = 'dotted')
+
+        # logscale mad.
+        logstat = np.log1p(adata.obs[stat])
+        me = logstat.median()
+        mad = logstat.mad()
+        filt.loc[stat,'log3mad low'] = np.expm1(me-3*mad)
+        filt.loc[stat,'log3mad high'] = np.expm1(me+3*mad)
+
+        ax.hlines(filt.loc[stat,'log3mad low'],-0.5,0.5, linewidth=2, color = 'blue', linestyles = 'dotted')
+        ax.hlines(filt.loc[stat,'log3mad high'],-0.5,0.5, linewidth=2, color = 'blue',  linestyles = 'dotted')
+
+    return filt      
+```
+
+
+```{python}
+default_flags = {'mito': '^MT-', 'ribo': '^RP[LS]', 'hb': '^HB'}
+mouse_flags = {'mito': '^mt-', 'ribo': '^Rp[ls]', 'hb': '^Hb'}
+
+
+def qc_onesample(infile, sname, species = "mouse", metrics = None):
+    flags = default_flags
+    if species == "mouse":
+        flags = mouse_flags
+    if metrics is None:
+        metrics = sctk.default_metric_params_df
+    adata = sc.read_10x_h5(infile)
+    adata.var_names_make_unique()
+    sctk.calculate_qc(adata, flags =  mouse_flags)
+    sctk.cellwise_qc(adata, plot=False, metrics=metrics)
+    filt = plot_qc_violins(adata)
+    return adata,filt
+```
+
+
+::: {.panel-tabset}
+
+```{python}
+#| output: asis
+#| echo: false
+#| warning: false
+
+alldata = {}
+filt_settings = {}
+
+for sample in samples:
+    infile = settings['samples'][sample]['filt_file']
+    if infile == None:
+        continue
+    display(Markdown(f"#### {sample}"))
+
+    [tmp,filt] = qc_onesample(infile,sample)
+    alldata[sample] = tmp
+    filt_settings[sample] = filt
+    display(plt.gcf())
+    plt.close()
+    display(Markdown(f" "))    
+
+```
+
+
+:::
+
+
+OBS! Their default high/low values cuts of the distributions at the wrong places.
+
+Also, why is the high for `percent_hb` set at 1? 
+
+```{python}
+alldata[sample].uns['scautoqc_ranges']
+```
+
+## With no high/low values.
+
+```{python}
+metrics = sctk.default_metric_params_df
+metrics
+```
+
+Keep the min limits for counts and genes, all others from 0-100
+
+```{python}
+metrics.loc['percent_mito','min'] = 0.0
+metrics.loc['percent_mito','max'] = 100.0
+metrics.loc['percent_hb','min'] = 0.0
+metrics.loc['percent_hb','max'] = 100.0
+metrics
+```
+
+::: {.panel-tabset}
+
+```{python}
+#| output: asis
+#| echo: false
+#| warning: false
+
+alldata = {}
+filt_settings = {}
+
+for sample in samples:
+    infile = settings['samples'][sample]['filt_file']
+    if infile == None:
+        continue
+    display(Markdown(f"#### {sample}"))
+    [tmp,filt] = qc_onesample(infile,sample, metrics = metrics)
+    alldata[sample] = tmp
+    filt_settings[sample] = filt
+    display(plt.gcf())
+    plt.close()
+    display(Markdown(f" "))   
+    print(filt)
+    display(Markdown(f" ")) 
+
+```
+
+:::
+
+Now, we have mito filter close to 100 and most of the cells filtered on the hb cutoff. 
+
+Many of the samples have weird distribution for mito, and hence both methods fail to find good cutoffs. 
+
+
+#### Session
+
+<details>
+  <summary>Click here</summary>
+
+```{python}
+#| label: session
+sc.logging.print_versions()
+```
+
+</details>

@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Test script for sctk">
+
+<title>sctk</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="sctk_test_files/libs/clipboard/clipboard.min.js"></script>
+<script src="sctk_test_files/libs/quarto-html/quarto.js"></script>
+<script src="sctk_test_files/libs/quarto-html/popper.min.js"></script>
+<script src="sctk_test_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="sctk_test_files/libs/quarto-html/anchor.min.js"></script>
+<link href="sctk_test_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="sctk_test_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="sctk_test_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="sctk_test_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="sctk_test_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="sctk_test_files/libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="sctk_test_files/libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="sctk_test_files/libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="1">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#run-their-tutorial" id="toc-run-their-tutorial" class="nav-link active" data-scroll-target="#run-their-tutorial">Run their tutorial</a>
+  <ul class="collapse">
+  <li><a href="#change-one-cutoff." id="toc-change-one-cutoff." class="nav-link" data-scroll-target="#change-one-cutoff.">Change one cutoff.</a></li>
+  <li><a href="#add-in-custom-cutoffs" id="toc-add-in-custom-cutoffs" class="nav-link" data-scroll-target="#add-in-custom-cutoffs">Add in custom cutoffs</a></li>
+  </ul></li>
+  <li><a href="#own-dataset" id="toc-own-dataset" class="nav-link" data-scroll-target="#own-dataset">Own dataset</a></li>
+  <li><a href="#with-no-highlow-values." id="toc-with-no-highlow-values." class="nav-link" data-scroll-target="#with-no-highlow-values.">With no high/low values.</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">sctk</h1>
+</div>
+
+<div>
+  <div class="description">
+    Test script for sctk
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="run-their-tutorial" class="level2">
+<h2 class="anchored" data-anchor-id="run-their-tutorial">Run their tutorial</h2>
+<p>https://teichlab.github.io/sctk/notebooks/automatic_qc.html</p>
+<div id="69221341" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scanpy <span class="im">as</span> sc</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sctk</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> IPython.display <span class="im">import</span> display, Markdown</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>sc.settings.set_figure_params(dpi<span class="op">=</span><span class="dv">80</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="42bff20a" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>adata <span class="op">=</span> sc.datasets.pbmc3k()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>adata</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/anndata/__init__.py:55: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="112">
+<pre><code>AnnData object with n_obs × n_vars = 2700 × 32738
+    var: 'gene_ids'</code></pre>
+</div>
+</div>
+<div id="6099f4ec" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sctk.calculate_qc(adata)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>adata</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="113">
+<pre><code>AnnData object with n_obs × n_vars = 2700 × 32738
+    obs: 'n_counts', 'log1p_n_counts', 'n_genes', 'log1p_n_genes', 'percent_mito', 'n_counts_mito', 'percent_ribo', 'n_counts_ribo', 'percent_hb', 'n_counts_hb', 'percent_top50'
+    var: 'gene_ids', 'mito', 'ribo', 'hb', 'n_counts', 'n_cells'</code></pre>
+</div>
+</div>
+<div id="3cc25c65" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sctk.cellwise_qc(adata, plot<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>adata</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="sctk_test_files/figure-html/cell-5-output-1.png" width="326" height="300" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>n_counts: [959.4421576429211, 15844.0029296875], 2563/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-3.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="sctk_test_files/figure-html/cell-5-output-3.png" width="360" height="287" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>n_genes: [320.5358429786537, 3421.998779296875], 2678/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-5.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="sctk_test_files/figure-html/cell-5-output-5.png" width="360" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>percent_mito: [0.0, 6.166499819089544], 2677/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-7.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="sctk_test_files/figure-html/cell-5-output-7.png" width="360" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>percent_ribo: [13.568207997582016, 51.07162303563632], 2627/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-9.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="sctk_test_files/figure-html/cell-5-output-9.png" width="378" height="285" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>WARNING: Failed to find lower bound, using min value instead.
+percent_hb: [0.0, 0.002321736026317521], 2375/2700 passed
+2185/2700 pass</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="114">
+<pre><code>AnnData object with n_obs × n_vars = 2700 × 32738
+    obs: 'n_counts', 'log1p_n_counts', 'n_genes', 'log1p_n_genes', 'percent_mito', 'n_counts_mito', 'percent_ribo', 'n_counts_ribo', 'percent_hb', 'n_counts_hb', 'percent_top50', 'cell_passed_qc'
+    var: 'gene_ids', 'mito', 'ribo', 'hb', 'n_counts', 'n_cells'
+    uns: 'scautoqc_ranges'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-5-output-12.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="sctk_test_files/figure-html/cell-5-output-12.png" width="358" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="a5dbbb76" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>adata.obs[<span class="st">'cell_passed_qc'</span>].<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="115">
+<pre><code>2185</code></pre>
+</div>
+</div>
+<div id="3ba2502a" class="cell" data-execution_count="6">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>adata.uns[<span class="st">'scautoqc_ranges'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="116">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">low</th>
+<th data-quarto-table-cell-role="th">high</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>959.442158</td>
+<td>15844.00293</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>320.535843</td>
+<td>3421.998779</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>6.1665</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>13.568208</td>
+<td>51.071623</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>0.002322</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Under the hood, sctk.cellwise_qc() models each of the specified QC metrics as a Gaussian mixture model, with the model proposing possible low and high value cutoffs at points where the probability density function of the mixture falls below a threshold (0.05 by default). The function is written to allow robust filtering, requiring a specific formatting of metrics. The default values are stored in sctk.default_metric_params_df:</p>
+<p>Plot violins with the cutoffs:</p>
+<ul>
+<li>median in solid black,</li>
+<li>median +/- 3MAD in dotted black.<br>
+</li>
+<li>logscale median +/- 3MAD in dotted blue.<br>
+</li>
+<li>Their cutoffs in red,</li>
+</ul>
+<div id="913e38a0" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>filt <span class="op">=</span> adata.uns[<span class="st">'scautoqc_ranges'</span>].copy()</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>filt[<span class="st">'3mad low'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>filt[<span class="st">'3mad high'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>filt[<span class="st">'log3mad low'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>filt[<span class="st">'log3mad high'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>qc_stats <span class="op">=</span> filt.index.tolist()</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">6</span>),constrained_layout<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> stat, ax <span class="kw">in</span> <span class="bu">zip</span>(qc_stats, axs.flatten()):</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    me <span class="op">=</span> adata.obs[stat].median()</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    mad <span class="op">=</span> adata.obs[stat].mad()</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    filt.loc[stat,<span class="st">'3mad low'</span>] <span class="op">=</span> me<span class="op">-</span><span class="dv">3</span><span class="op">*</span>mad</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    filt.loc[stat,<span class="st">'3mad high'</span>] <span class="op">=</span> me<span class="op">+</span><span class="dv">3</span><span class="op">*</span>mad</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    sc.pl.violin(adata,stat,  ax<span class="op">=</span>ax, show<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># median and 3 mad</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    ax.hlines(me,<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># their predictions</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>    ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># logscale mad.</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>    logstat <span class="op">=</span> np.log1p(adata.obs[stat])</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>    me <span class="op">=</span> logstat.median()</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    mad <span class="op">=</span> logstat.mad()</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>    filt.loc[stat,<span class="st">'log3mad low'</span>] <span class="op">=</span> np.expm1(me<span class="op">-</span><span class="dv">3</span><span class="op">*</span>mad)</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>    filt.loc[stat,<span class="st">'log3mad high'</span>] <span class="op">=</span> np.expm1(me<span class="op">+</span><span class="dv">3</span><span class="op">*</span>mad)</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'log3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'log3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>filt    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:13: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = adata.obs[stat].mad()
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:31: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = logstat.mad()
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:13: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = adata.obs[stat].mad()
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:31: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = logstat.mad()
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:13: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = adata.obs[stat].mad()
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:31: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = logstat.mad()
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:13: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = adata.obs[stat].mad()
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:31: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = logstat.mad()
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:13: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = adata.obs[stat].mad()
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/514396654.py:31: FutureWarning: The 'mad' method is deprecated and will be removed in a future version. To compute the same result, you may do `(df - df.mean()).abs().mean()`.
+  mad = logstat.mad()</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="117">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">low</th>
+<th data-quarto-table-cell-role="th">high</th>
+<th data-quarto-table-cell-role="th">3mad low</th>
+<th data-quarto-table-cell-role="th">3mad high</th>
+<th data-quarto-table-cell-role="th">log3mad low</th>
+<th data-quarto-table-cell-role="th">log3mad high</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>959.442158</td>
+<td>15844.00293</td>
+<td>-19.372498</td>
+<td>4413.372498</td>
+<td>846.421441</td>
+<td>5700.062199</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>320.535843</td>
+<td>3421.998779</td>
+<td>229.755862</td>
+<td>1404.244138</td>
+<td>403.951025</td>
+<td>1651.357838</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>6.1665</td>
+<td>-0.251055</td>
+<td>4.310334</td>
+<td>0.525828</td>
+<td>5.015563</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>13.568208</td>
+<td>51.071623</td>
+<td>10.474026</td>
+<td>63.065006</td>
+<td>15.704064</td>
+<td>84.400526</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>0.002322</td>
+<td>-0.047843</td>
+<td>0.047843</td>
+<td>-0.040083</td>
+<td>0.041757</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-8-output-3.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="sctk_test_files/figure-html/cell-8-output-3.png" width="809" height="489" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Same but with logscale for all!</p>
+<div id="9742bf44" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">6</span>),constrained_layout<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> stat, ax <span class="kw">in</span> <span class="bu">zip</span>(qc_stats, axs.flatten()):</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    sc.pl.violin(adata,stat,  ax<span class="op">=</span>ax, show<span class="op">=</span><span class="va">False</span>, log<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    me <span class="op">=</span> adata.obs[stat].median()   </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    ax.hlines(np.expm1(me),<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'log3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    ax.hlines(filt.loc[stat,<span class="st">'log3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/2335514379.py:6: RuntimeWarning: overflow encountered in expm1
+  ax.hlines(np.expm1(me),-0.5,0.5, linewidth=2, color = 'black')
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/var/folders/f_/vj_w4xx933z1rr95yf4rhphr0000gp/T/ipykernel_98360/2335514379.py:6: RuntimeWarning: overflow encountered in expm1
+  ax.hlines(np.expm1(me),-0.5,0.5, linewidth=2, color = 'black')
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(
+/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-9-output-2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="sctk_test_files/figure-html/cell-9-output-2.png" width="809" height="489" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="7f012a15" class="cell" data-execution_count="9">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>sctk.default_metric_params_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="119">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">scale</th>
+<th data-quarto-table-cell-role="th">side</th>
+<th data-quarto-table-cell-role="th">min_pass_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>1000.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>100.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_soup</td>
+<td>NaN</td>
+<td>5.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_spliced</td>
+<td>50.0</td>
+<td>97.5</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">scrublet_score</td>
+<td>NaN</td>
+<td>0.3</td>
+<td>linear</td>
+<td>max_only</td>
+<td>0.95</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="change-one-cutoff." class="level3">
+<h3 class="anchored" data-anchor-id="change-one-cutoff.">Change one cutoff.</h3>
+<p>Min/max cutoffs will set the minimum/maximum value to use in modelling the distribution.</p>
+<div id="70a72a3d" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> sctk.default_metric_params_df.loc[[<span class="st">"n_counts"</span>,</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"n_genes"</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"percent_mito"</span>,</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"percent_ribo"</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"percent_hb"</span>], :]</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">"n_genes"</span>, <span class="st">"min"</span>] <span class="op">=</span> <span class="dv">500</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>metrics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="120">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">scale</th>
+<th data-quarto-table-cell-role="th">side</th>
+<th data-quarto-table-cell-role="th">min_pass_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>1000.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>500.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.1</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>both</td>
+<td>0.1</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="19a537af" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>sctk.cellwise_qc(adata, metrics<span class="op">=</span>metrics, plot<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># before was:</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># n_genes: [320.5358429786537, 3421.998779296875], 2678/2700 passed</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="co"># now is: </span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># n_genes: [495.3027116195289, 3421.998779296875], 2486/2700 passed</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># why 495 and not 500??</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9"><img src="sctk_test_files/figure-html/cell-12-output-1.png" width="326" height="300" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>n_counts: [959.4421576429211, 15844.0029296875], 2563/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-3.png" class="lightbox" data-gallery="quarto-lightbox-gallery-10"><img src="sctk_test_files/figure-html/cell-12-output-3.png" width="360" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>n_genes: [495.3027116195289, 3421.998779296875], 2486/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-5.png" class="lightbox" data-gallery="quarto-lightbox-gallery-11"><img src="sctk_test_files/figure-html/cell-12-output-5.png" width="360" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>percent_mito: [0.0, 6.166499819089544], 2677/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-7.png" class="lightbox" data-gallery="quarto-lightbox-gallery-12"><img src="sctk_test_files/figure-html/cell-12-output-7.png" width="360" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>percent_ribo: [13.568207997582016, 51.07162303563632], 2627/2700 passed</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-9.png" class="lightbox" data-gallery="quarto-lightbox-gallery-13"><img src="sctk_test_files/figure-html/cell-12-output-9.png" width="378" height="285" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>WARNING: Failed to find lower bound, using min value instead.
+percent_hb: [0.0, 0.002321736026317521], 2375/2700 passed
+2119/2700 pass</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-12-output-11.png" class="lightbox" data-gallery="quarto-lightbox-gallery-14"><img src="sctk_test_files/figure-html/cell-12-output-11.png" width="358" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Why is the cutoff not set to 500 for n_genes and 1000 for n_counts?</p>
+<p>Filters out all cells below the cutoffs from the data before running the modelling, then defines the cutoffs from the model.</p>
+<p>From tutorial:</p>
+<p>Under the hood, sctk.cellwise_qc() models each of the specified QC metrics as a Gaussian mixture model, with the model proposing possible low and high value cutoffs at points where the probability density function of the mixture falls below a threshold (0.05 by default). The function is written to allow robust filtering, requiring a specific formatting of metrics. The default values are stored in sctk.default_metric_params_df:</p>
+</section>
+<section id="add-in-custom-cutoffs" class="level3">
+<h3 class="anchored" data-anchor-id="add-in-custom-cutoffs">Add in custom cutoffs</h3>
+<p>For now had genes, counts, mito, ribo, hb.</p>
+<p>Add in also <code>percent_top50</code> that is already calculated.</p>
+<div id="cf05bf17" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>sc.pl.violin(adata,<span class="st">"percent_top50"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/scanpy/plotting/_anndata.py:843: FutureWarning: 
+
+The `scale` parameter has been renamed and will be removed in v0.15.0. Pass `density_norm='width'` for the same effect.
+  ax = sns.violinplot(</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="sctk_test_files/figure-html/cell-13-output-2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-15"><img src="sctk_test_files/figure-html/cell-13-output-2.png" width="284" height="281" class="figure-img"></a></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Can also add in additional flags with:</p>
+<pre><code>def calculate_qc(
+    adata,
+    flags={"mito": r"^MT-", "ribo": r"^RP[LS]", "hb": r"^HB"},
+    extra_flags={},</code></pre>
+<div id="e7325233" class="cell" data-execution_count="13">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">'percent_top50'</span>,:] <span class="op">=</span> [<span class="fl">0.0</span>,<span class="fl">100.0</span>, <span class="st">'log'</span>, <span class="st">'both'</span>, <span class="fl">0.1</span>]</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>sctk.cellwise_qc(adata, metrics<span class="op">=</span>metrics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>n_counts: [959.4421576429211, 15844.0029296875], 2563/2700 passed
+n_genes: [495.3027116195289, 3421.998779296875], 2486/2700 passed
+percent_mito: [0.0, 6.166499819089544], 2677/2700 passed
+percent_ribo: [13.568207997582016, 51.07162303563632], 2627/2700 passed
+WARNING: Failed to find lower bound, using min value instead.
+percent_hb: [0.0, 0.002321736026317521], 2375/2700 passed
+percent_top50: [33.53985011321927, 54.207314106335055], 2633/2700 passed
+2095/2700 pass</code></pre>
+</div>
+</div>
+<p>Now also filters for percent_top50</p>
+<p>NOTE!</p>
+<p>Need to add in additional QC measures to the <code>calculate_qc</code> step. It should also take a list of genes instead of a pattern.</p>
+</section>
+</section>
+<section id="own-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="own-dataset">Own dataset</h2>
+<p>Use the same data as for the qc_overview.qmd script.</p>
+<div id="86757347" class="cell" data-execution_count="14">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> yaml</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'../all_qc/settings.yml'</span>, <span class="st">'r'</span>) <span class="im">as</span> f:</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    settings <span class="op">=</span> yaml.load(f, Loader<span class="op">=</span>yaml.SafeLoader)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>samples <span class="op">=</span> <span class="bu">list</span>(settings[<span class="st">'samples'</span>].keys())    </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>For one dataset at a time, run qc and plotting.</p>
+<div id="d6b503c0" class="cell" data-execution_count="15">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_qc_violins(adata):</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    filt <span class="op">=</span> adata.uns[<span class="st">'scautoqc_ranges'</span>].copy()</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    filt[<span class="st">'3mad low'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    filt[<span class="st">'3mad high'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    filt[<span class="st">'log3mad low'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    filt[<span class="st">'log3mad high'</span>] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    qc_stats <span class="op">=</span> filt.index.tolist()</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    fig, axs <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">6</span>),constrained_layout<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> stat, ax <span class="kw">in</span> <span class="bu">zip</span>(qc_stats, axs.flatten()):</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>        me <span class="op">=</span> adata.obs[stat].median()</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>        mad <span class="op">=</span> adata.obs[stat].mad()</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>        filt.loc[stat,<span class="st">'3mad low'</span>] <span class="op">=</span> me<span class="op">-</span><span class="dv">3</span><span class="op">*</span>mad</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>        filt.loc[stat,<span class="st">'3mad high'</span>] <span class="op">=</span> me<span class="op">+</span><span class="dv">3</span><span class="op">*</span>mad</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>        sc.pl.violin(adata,stat,  ax<span class="op">=</span>ax, show<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>        <span class="co"># median and 3 mad</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>        ax.hlines(me,<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>)</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>        ax.hlines(filt.loc[stat,<span class="st">'3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>        ax.hlines(filt.loc[stat,<span class="st">'3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'black'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a>        <span class="co"># their predictions</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>        ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a>        ax.hlines(adata.uns[<span class="st">'scautoqc_ranges'</span>].loc[stat,<span class="st">'high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'red'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a>        <span class="co"># logscale mad.</span></span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>        logstat <span class="op">=</span> np.log1p(adata.obs[stat])</span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>        me <span class="op">=</span> logstat.median()</span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true" tabindex="-1"></a>        mad <span class="op">=</span> logstat.mad()</span>
+<span id="cb35-32"><a href="#cb35-32" aria-hidden="true" tabindex="-1"></a>        filt.loc[stat,<span class="st">'log3mad low'</span>] <span class="op">=</span> np.expm1(me<span class="op">-</span><span class="dv">3</span><span class="op">*</span>mad)</span>
+<span id="cb35-33"><a href="#cb35-33" aria-hidden="true" tabindex="-1"></a>        filt.loc[stat,<span class="st">'log3mad high'</span>] <span class="op">=</span> np.expm1(me<span class="op">+</span><span class="dv">3</span><span class="op">*</span>mad)</span>
+<span id="cb35-34"><a href="#cb35-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-35"><a href="#cb35-35" aria-hidden="true" tabindex="-1"></a>        ax.hlines(filt.loc[stat,<span class="st">'log3mad low'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>, linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-36"><a href="#cb35-36" aria-hidden="true" tabindex="-1"></a>        ax.hlines(filt.loc[stat,<span class="st">'log3mad high'</span>],<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">2</span>, color <span class="op">=</span> <span class="st">'blue'</span>,  linestyles <span class="op">=</span> <span class="st">'dotted'</span>)</span>
+<span id="cb35-37"><a href="#cb35-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-38"><a href="#cb35-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> filt      </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div id="a98c1096" class="cell" data-execution_count="16">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>default_flags <span class="op">=</span> {<span class="st">'mito'</span>: <span class="st">'^MT-'</span>, <span class="st">'ribo'</span>: <span class="st">'^RP[LS]'</span>, <span class="st">'hb'</span>: <span class="st">'^HB'</span>}</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>mouse_flags <span class="op">=</span> {<span class="st">'mito'</span>: <span class="st">'^mt-'</span>, <span class="st">'ribo'</span>: <span class="st">'^Rp[ls]'</span>, <span class="st">'hb'</span>: <span class="st">'^Hb'</span>}</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> qc_onesample(infile, sname, species <span class="op">=</span> <span class="st">"mouse"</span>, metrics <span class="op">=</span> <span class="va">None</span>):</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    flags <span class="op">=</span> default_flags</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> species <span class="op">==</span> <span class="st">"mouse"</span>:</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>        flags <span class="op">=</span> mouse_flags</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> metrics <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>        metrics <span class="op">=</span> sctk.default_metric_params_df</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    adata <span class="op">=</span> sc.read_10x_h5(infile)</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    adata.var_names_make_unique()</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    sctk.calculate_qc(adata, flags <span class="op">=</span>  mouse_flags)</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    sctk.cellwise_qc(adata, plot<span class="op">=</span><span class="va">False</span>, metrics<span class="op">=</span>metrics)</span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>    filt <span class="op">=</span> plot_qc_violins(adata)</span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> adata,filt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">GSM6757771_rep1</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">GSM6757772_rep2</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">GSM6757773_rep3</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href="">GSM6757774_nuc2</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-5" role="tab" aria-controls="tabset-1-5" aria-selected="false" href="">GSM6757775_nuc3</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-6-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-6" role="tab" aria-controls="tabset-1-6" aria-selected="false" href="">GSM6594872_SAM24349928</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-7-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-7" role="tab" aria-controls="tabset-1-7" aria-selected="false" href="">GSM6594883_SAM24374037</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<p>n_counts: [998.8189036946683, 52822.0234375], 20125/21819 passed n_genes: [158.0604731092683, 7341.9990234375], 21684/21819 passed WARNING: Failed to find upper bound, using max value instead. percent_mito: [1.5710381269454956, 99.0433602906255], 21819/21819 passed percent_ribo: [0.08963550745615209, 12.990035269767446], 21272/21819 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.008226235178531683], 14808/21819 passed 12694/21819 pass <img src="sctk_test_files/figure-html/cell-18-output-3.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<p>WARNING: Failed to find lower bound, using min value instead. n_counts: [1090.0001885884603, 81827.0234375], 28187/28187 passed n_genes: [331.74064094109804, 7455.0029296875], 27700/28187 passed percent_mito: [3.5524516105651855, 96.59732881630626], 28187/28187 passed percent_ribo: [0.5304182634908018, 8.720658511329558], 27014/28187 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.0063579430425736655], 19805/28187 passed 18621/28187 pass <img src="sctk_test_files/figure-html/cell-18-output-7.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<p>n_counts: [943.7281839163966, 158158.046875], 5817/6546 passed n_genes: [151.4612698386905, 9132.00390625], 6505/6546 passed WARNING: Failed to find upper bound, using max value instead. percent_mito: [0.9932043552398682, 98.55444395565685], 6546/6546 passed percent_ribo: [0.08243798988029977, 11.703228102231645], 6309/6546 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.008707481619349625], 4155/6546 passed 3299/6546 pass <img src="sctk_test_files/figure-html/cell-18-output-11.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
+<p>n_counts: [984.0973939349427, 16831.99609375], 21557/59249 passed n_genes: [307.5984031843238, 5603.0009765625], 58978/59249 passed percent_mito: [2.4836599826812744, 35.84708661071012], 56957/59249 passed percent_ribo: [0.6091120406363645, 3.6952778869737397], 56934/59249 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.005304834650712931], 49533/59249 passed 14962/59249 pass <img src="sctk_test_files/figure-html/cell-18-output-15.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-5-tab">
+<p>n_counts: [985.6987429778259, 31962.0078125], 14723/20129 passed n_genes: [287.7290976044471, 6441.9970703125], 20078/20129 passed percent_mito: [1.0586109161376953, 69.02645072245264], 20048/20129 passed percent_ribo: [0.5265867296012456, 4.767332244097367], 19468/20129 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.007554147630175298], 16218/20129 passed 10988/20129 pass <img src="sctk_test_files/figure-html/cell-18-output-19.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-6" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-6-tab">
+<p>WARNING: Failed to find upper bound, using max value instead. n_counts: [837.1497179841429, 76996.0234375], 950/1220 passed WARNING: Failed to find upper bound, using max value instead. n_genes: [90.7174032181459, 7366.99951171875], 1214/1220 passed percent_mito: [0.0, 5.315296248654676], 849/1220 passed percent_ribo: [0.9445020772111499, 30.980844365043918], 1201/1220 passed percent_hb: [0.0, 0.10605495949228155], 1180/1220 passed 750/1220 pass <img src="sctk_test_files/figure-html/cell-18-output-23.png" width="809" height="489"></p>
+</div>
+<div id="tabset-1-7" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-7-tab">
+<p>n_counts: [939.440873537478, 67956.0234375], 4764/7495 passed n_genes: [145.7380984999453, 7647.001953125], 7482/7495 passed WARNING: Failed to find lower bound, using min value instead. percent_mito: [0.0, 11.673874619943717], 6028/7495 passed percent_ribo: [0.6671615760819922, 23.50418147380468], 7435/7495 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.00894023109612361], 5427/7495 passed 2718/7495 pass <img src="sctk_test_files/figure-html/cell-18-output-27.png" width="809" height="489"></p>
+</div>
+</div>
+</div>
+<p>OBS! Their default high/low values cuts of the distributions at the wrong places.</p>
+<p>Also, why is the high for <code>percent_hb</code> set at 1?</p>
+<div id="45d47524" class="cell" data-execution_count="18">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>alldata[sample].uns[<span class="st">'scautoqc_ranges'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="128">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">low</th>
+<th data-quarto-table-cell-role="th">high</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>939.440874</td>
+<td>67956.023438</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>145.738098</td>
+<td>7647.001953</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>11.673875</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>0.667162</td>
+<td>23.504181</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>0.00894</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="with-no-highlow-values." class="level2">
+<h2 class="anchored" data-anchor-id="with-no-highlow-values.">With no high/low values.</h2>
+<div id="6ede0b68" class="cell" data-execution_count="19">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>metrics <span class="op">=</span> sctk.default_metric_params_df</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>metrics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="129">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">scale</th>
+<th data-quarto-table-cell-role="th">side</th>
+<th data-quarto-table-cell-role="th">min_pass_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>1000.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>100.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_soup</td>
+<td>NaN</td>
+<td>5.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_spliced</td>
+<td>50.0</td>
+<td>97.5</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">scrublet_score</td>
+<td>NaN</td>
+<td>0.3</td>
+<td>linear</td>
+<td>max_only</td>
+<td>0.95</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Keep the min limits for counts and genes, all others from 0-100</p>
+<div id="271ac25d" class="cell" data-execution_count="20">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">'percent_mito'</span>,<span class="st">'min'</span>] <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">'percent_mito'</span>,<span class="st">'max'</span>] <span class="op">=</span> <span class="fl">100.0</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">'percent_hb'</span>,<span class="st">'min'</span>] <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>metrics.loc[<span class="st">'percent_hb'</span>,<span class="st">'max'</span>] <span class="op">=</span> <span class="fl">100.0</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>metrics</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display" data-execution_count="130">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">min</th>
+<th data-quarto-table-cell-role="th">max</th>
+<th data-quarto-table-cell-role="th">scale</th>
+<th data-quarto-table-cell-role="th">side</th>
+<th data-quarto-table-cell-role="th">min_pass_rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">n_counts</td>
+<td>1000.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">n_genes</td>
+<td>100.0</td>
+<td>NaN</td>
+<td>log</td>
+<td>min_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_mito</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_ribo</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_hb</td>
+<td>0.0</td>
+<td>100.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">percent_soup</td>
+<td>NaN</td>
+<td>5.0</td>
+<td>log</td>
+<td>max_only</td>
+<td>0.10</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">percent_spliced</td>
+<td>50.0</td>
+<td>97.5</td>
+<td>log</td>
+<td>both</td>
+<td>0.10</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">scrublet_score</td>
+<td>NaN</td>
+<td>0.3</td>
+<td>linear</td>
+<td>max_only</td>
+<td>0.95</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">GSM6757771_rep1</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">GSM6757772_rep2</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">GSM6757773_rep3</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-4" role="tab" aria-controls="tabset-2-4" aria-selected="false" href="">GSM6757774_nuc2</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-5" role="tab" aria-controls="tabset-2-5" aria-selected="false" href="">GSM6757775_nuc3</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-6-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-6" role="tab" aria-controls="tabset-2-6" aria-selected="false" href="">GSM6594872_SAM24349928</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-7-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-7" role="tab" aria-controls="tabset-2-7" aria-selected="false" href="">GSM6594883_SAM24374037</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<p>n_counts: [998.8189036946683, 52822.0234375], 20125/21819 passed n_genes: [158.0604731092683, 7341.9990234375], 21684/21819 passed WARNING: Failed to find upper bound, using max value instead. percent_mito: [1.5710381269454956, 99.0433602906255], 21819/21819 passed percent_ribo: [0.08963550745615209, 12.990035269767446], 21272/21819 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.008226235178531683], 14808/21819 passed 12694/21819 pass <img src="sctk_test_files/figure-html/cell-22-output-3.png" width="809" height="489"></p>
+<pre><code>                 low          high     3mad low     3mad high  \</code></pre>
+<p>n_counts 998.818904 52822.023438 -6988.027344 18222.027344<br>
+n_genes 158.060473 7341.999023 -1096.459313 3718.459313<br>
+percent_mito 1.571038 99.04336 -10.101402 95.355812<br>
+percent_ribo 0.089636 12.990035 -2.484496 10.037177<br>
+percent_hb 0.0 0.008226 -0.087055 0.087055</p>
+<pre><code>          log3mad low  log3mad high  </code></pre>
+<p>n_counts 613.574347 51354.733682<br>
+n_genes 189.457394 9036.947889<br>
+percent_mito 10.844608 159.691973<br>
+percent_ribo 0.447568 14.759833<br>
+percent_hb -0.040496 0.042205</p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<p>WARNING: Failed to find lower bound, using min value instead. n_counts: [1090.0001885884603, 81827.0234375], 28187/28187 passed n_genes: [331.74064094109804, 7455.0029296875], 27700/28187 passed percent_mito: [3.5524516105651855, 96.59732881630626], 28187/28187 passed percent_ribo: [0.5304182634908018, 8.720658511329558], 27014/28187 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.0063579430425736655], 19805/28187 passed 18621/28187 pass <img src="sctk_test_files/figure-html/cell-22-output-9.png" width="809" height="489"></p>
+<pre><code>                  low          high     3mad low     3mad high  \</code></pre>
+<p>n_counts 1090.000189 81827.023438 -6753.263184 16291.263184<br>
+n_genes 331.740641 7455.00293 -935.907270 3505.907270<br>
+percent_mito 3.552452 96.597329 -0.323897 77.911742<br>
+percent_ribo 0.530418 8.720659 -0.324760 7.855783<br>
+percent_hb 0.0 0.006358 -0.063114 0.063114</p>
+<pre><code>          log3mad low  log3mad high  </code></pre>
+<p>n_counts 674.238182 33695.094581<br>
+n_genes 266.972996 6170.502438<br>
+percent_mito 14.172989 103.366790<br>
+percent_ribo 1.058184 10.034045<br>
+percent_hb -0.040202 0.041886</p>
+</div>
+<div id="tabset-2-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-3-tab">
+<p>n_counts: [943.7281839163966, 158158.046875], 5817/6546 passed n_genes: [151.4612698386905, 9132.00390625], 6505/6546 passed WARNING: Failed to find upper bound, using max value instead. percent_mito: [0.9932043552398682, 98.55444395565685], 6546/6546 passed percent_ribo: [0.08243798988029977, 11.703228102231645], 6309/6546 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.008707481619349625], 4155/6546 passed 3299/6546 pass <img src="sctk_test_files/figure-html/cell-22-output-15.png" width="809" height="489"></p>
+<pre><code>                 low           high      3mad low     3mad high  \</code></pre>
+<p>n_counts 943.728184 158158.046875 -15054.550781 26511.550781<br>
+n_genes 151.46127 9132.003906 -1952.435605 4908.435605<br>
+percent_mito 0.993204 98.554444 -18.523346 84.808289<br>
+percent_ribo 0.082438 11.703228 -2.148968 10.526691<br>
+percent_hb 0.0 0.008707 -0.244065 0.244065</p>
+<pre><code>          log3mad low  log3mad high  </code></pre>
+<p>n_counts 330.636516 98984.333542<br>
+n_genes 165.627112 13126.761550<br>
+percent_mito 5.491024 178.587748<br>
+percent_ribo 0.610012 15.723031<br>
+percent_hb -0.053918 0.056990</p>
+</div>
+<div id="tabset-2-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-4-tab">
+<p>n_counts: [984.0973939349427, 16831.99609375], 21557/59249 passed n_genes: [307.5984031843238, 5603.0009765625], 58978/59249 passed percent_mito: [2.4836599826812744, 35.84708661071012], 56957/59249 passed percent_ribo: [0.6091120406363645, 3.6952778869737397], 56934/59249 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.005304834650712931], 49533/59249 passed 14962/59249 pass <img src="sctk_test_files/figure-html/cell-22-output-21.png" width="809" height="489"></p>
+<pre><code>                 low          high    3mad low    3mad high  log3mad low  \</code></pre>
+<p>n_counts 984.097394 16831.996094 -788.231140 2348.231140 224.856192<br>
+n_genes 307.598403 5603.000977 -532.870719 1440.870719 119.700188<br>
+percent_mito 2.48366 35.847087 1.811717 47.567594 7.129714<br>
+percent_ribo 0.609112 3.695278 -0.012148 4.062178 0.503192<br>
+percent_hb 0.0 0.005305 -0.087578 0.087578 -0.075658</p>
+<pre><code>          log3mad high  </code></pre>
+<p>n_counts 2699.659674<br>
+n_genes 1714.200317<br>
+percent_mito 80.178570<br>
+percent_ribo 5.087521<br>
+percent_hb 0.081850</p>
+</div>
+<div id="tabset-2-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-5-tab">
+<p>n_counts: [985.6987429778259, 31962.0078125], 14723/20129 passed n_genes: [287.7290976044471, 6441.9970703125], 20078/20129 passed percent_mito: [1.0586109161376953, 69.02645072245264], 20048/20129 passed percent_ribo: [0.5265867296012456, 4.767332244097367], 19468/20129 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.007554147630175298], 16218/20129 passed 10988/20129 pass <img src="sctk_test_files/figure-html/cell-22-output-27.png" width="809" height="489"></p>
+<pre><code>                 low          high     3mad low    3mad high  log3mad low  \</code></pre>
+<p>n_counts 985.698743 31962.007812 -2340.198486 4854.198486 252.274927<br>
+n_genes 287.729098 6441.99707 -1175.971396 2273.971396 111.806089<br>
+percent_mito 1.058611 69.026451 -3.725718 64.924453 5.800936<br>
+percent_ribo 0.526587 4.767332 -0.131875 4.979082 0.482469<br>
+percent_hb 0.0 0.007554 -0.067902 0.067902 -0.054648</p>
+<pre><code>          log3mad high  </code></pre>
+<p>n_counts 6247.405241<br>
+n_genes 2680.592840<br>
+percent_mito 145.820995<br>
+percent_ribo 6.906448<br>
+percent_hb 0.057807</p>
+</div>
+<div id="tabset-2-6" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-6-tab">
+<p>WARNING: Failed to find upper bound, using max value instead. n_counts: [837.1497179841429, 76996.0234375], 950/1220 passed WARNING: Failed to find upper bound, using max value instead. n_genes: [90.7174032181459, 7366.99951171875], 1214/1220 passed percent_mito: [0.0, 5.315296248654676], 849/1220 passed percent_ribo: [0.9445020772111499, 30.980844365043918], 1201/1220 passed percent_hb: [0.0, 0.10605495949228155], 1180/1220 passed 750/1220 pass <img src="sctk_test_files/figure-html/cell-22-output-34.png" width="809" height="489"></p>
+<pre><code>                 low          high      3mad low     3mad high  \</code></pre>
+<p>n_counts 837.149718 76996.023438 -30400.061523 34664.061523<br>
+n_genes 90.717403 7366.999512 -4424.555294 6625.555294<br>
+percent_mito 0.0 5.315296 -50.206759 53.415063<br>
+percent_ribo 0.944502 30.980844 -4.357924 21.342474<br>
+percent_hb 0.0 0.106055 -3.088187 3.088187</p>
+<pre><code>          log3mad low  log3mad high  </code></pre>
+<p>n_counts 45.643689 97540.252696<br>
+n_genes 56.082828 21254.113670<br>
+percent_mito -0.922832 86.880528<br>
+percent_ribo 1.391821 36.671406<br>
+percent_hb -0.165797 0.198750</p>
+</div>
+<div id="tabset-2-7" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-7-tab">
+<p>n_counts: [939.440873537478, 67956.0234375], 4764/7495 passed n_genes: [145.7380984999453, 7647.001953125], 7482/7495 passed WARNING: Failed to find lower bound, using min value instead. percent_mito: [0.0, 11.673874619943717], 6028/7495 passed percent_ribo: [0.6671615760819922, 23.50418147380468], 7435/7495 passed WARNING: Failed to find lower bound, using min value instead. percent_hb: [0.0, 0.00894023109612361], 5427/7495 passed 2718/7495 pass <img src="sctk_test_files/figure-html/cell-22-output-40.png" width="809" height="489"></p>
+<pre><code>                 low          high      3mad low     3mad high  \</code></pre>
+<p>n_counts 939.440874 67956.023438 -20577.916016 23213.916016<br>
+n_genes 145.738098 7647.001953 -4074.491395 5742.491395<br>
+percent_mito 0.0 11.673875 -40.790773 45.082619<br>
+percent_ribo 0.667162 23.504181 -5.185892 16.858366<br>
+percent_hb 0.0 0.00894 -3.509533 3.509533</p>
+<pre><code>          log3mad low  log3mad high  </code></pre>
+<p>n_counts 34.190675 49437.107154<br>
+n_genes 51.312455 13327.088033<br>
+percent_mito -0.846817 63.607942<br>
+percent_ribo 0.361660 33.321448<br>
+percent_hb -0.240487 0.316633</p>
+</div>
+</div>
+</div>
+<p>Now, we have mito filter close to 100 and most of the cells filtered on the hb cutoff.</p>
+<p>Many of the samples have weird distribution for mito, and hence both methods fail to find good cutoffs.</p>
+<section id="session" class="level4">
+<h4 class="anchored" data-anchor-id="session">Session</h4>
+<details>
+<summary>
+Click here
+</summary>
+<div id="session" class="cell" data-execution_count="22">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>sc.logging.print_versions()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>-----
+anndata     0.10.9
+scanpy      1.9.3
+-----
+CoreFoundation              NA
+Foundation                  NA
+PIL                         11.1.0
+PyObjCTools                 NA
+anyio                       NA
+appnope                     0.1.4
+array_api_compat            1.11.2
+arrow                       1.3.0
+asttokens                   NA
+attr                        25.3.0
+attrs                       25.3.0
+babel                       2.17.0
+brotli                      1.1.0
+certifi                     2025.04.26
+cffi                        1.17.1
+charset_normalizer          3.4.2
+colorama                    0.4.6
+comm                        0.2.2
+cycler                      0.12.1
+cython_runtime              NA
+dateutil                    2.9.0.post0
+debugpy                     1.8.14
+decorator                   5.2.1
+defusedxml                  0.7.1
+exceptiongroup              1.2.2
+executing                   2.2.0
+fastjsonschema              NA
+fqdn                        NA
+h5py                        3.13.0
+idna                        3.10
+igraph                      0.11.8
+importlib_resources         NA
+iniconfig                   NA
+ipykernel                   6.25.0
+isoduration                 NA
+jedi                        0.19.2
+jinja2                      3.1.6
+joblib                      1.5.0
+json5                       0.12.0
+jsonpointer                 3.0.0
+jsonschema                  4.23.0
+jsonschema_specifications   NA
+jupyter_events              0.12.0
+jupyter_server              2.15.0
+jupyterlab_server           2.27.3
+kiwisolver                  1.4.7
+leidenalg                   0.10.0
+llvmlite                    0.43.0
+markupsafe                  3.0.2
+matplotlib                  3.9.4
+matplotlib_inline           0.1.7
+mpl_toolkits                NA
+natsort                     8.4.0
+nbformat                    5.10.4
+numba                       0.60.0
+numpy                       1.26.4
+numpy_groupies              0.9.22
+objc                        11.0
+overrides                   NA
+packaging                   25.0
+pandas                      1.5.3
+parso                       0.8.4
+patsy                       1.0.1
+pexpect                     4.9.0
+pickleshare                 0.7.5
+platformdirs                4.3.7
+pluggy                      1.5.0
+prometheus_client           NA
+prompt_toolkit              3.0.51
+psutil                      7.0.0
+ptyprocess                  0.7.0
+pure_eval                   0.2.3
+py                          NA
+pycparser                   2.22
+pydev_ipython               NA
+pydevconsole                NA
+pydevd                      3.2.3
+pydevd_file_utils           NA
+pydevd_plugins              NA
+pydevd_tracing              NA
+pygments                    2.19.1
+pyparsing                   3.2.3
+pytest                      7.4.0
+pythonjsonlogger            NA
+pytz                        2025.2
+referencing                 NA
+requests                    2.32.3
+rfc3339_validator           0.1.4
+rfc3986_validator           0.1.1
+rpds                        NA
+scipy                       1.13.1
+sctk                        NA
+seaborn                     0.13.2
+send2trash                  NA
+session_info                1.0.0
+six                         1.17.0
+sklearn                     1.6.1
+sniffio                     1.3.1
+socks                       1.7.1
+sphinxcontrib               NA
+stack_data                  0.6.3
+statsmodels                 0.14.4
+texttable                   1.7.0
+threadpoolctl               3.6.0
+tornado                     6.4.2
+traitlets                   5.14.3
+typing_extensions           NA
+uri_template                NA
+urllib3                     2.4.0
+wcwidth                     0.2.13
+webcolors                   NA
+websocket                   1.8.0
+yaml                        6.0.2
+zipp                        NA
+zmq                         26.4.0
+zoneinfo                    NA
+zstandard                   0.23.0
+-----
+IPython             8.18.1
+jupyter_client      8.6.3
+jupyter_core        5.7.2
+jupyterlab          4.4.2
+notebook            7.4.2
+-----
+Python 3.9.22 | packaged by conda-forge | (main, Apr 14 2025, 23:29:55) [Clang 18.1.8 ]
+macOS-15.4.1-x86_64-i386-64bit
+-----
+Session information updated at 2025-05-13 11:33</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/Users/asabjor/miniconda3/envs/sctk/lib/python3.9/site-packages/session_info/main.py:213: UserWarning: The '__version__' attribute is deprecated and will be removed in MarkupSafe 3.1. Use feature detection, or `importlib.metadata.version("markupsafe")`, instead.
+  mod_version = _find_version(mod.__version__)</code></pre>
+</div>
+</div>
+</details>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","selector":".lightbox","loop":false,"openEffect":"zoom","descPosition":"bottom"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
